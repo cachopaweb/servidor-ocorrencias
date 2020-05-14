@@ -1,0 +1,115 @@
+unit UnitController.Contrassenhas;
+
+interface
+uses
+  Horse,
+  Classes,
+  SysUtils,
+  System.Json,
+  DB,
+  UnitConexao.Model.Interfaces,
+  UnitConexao.FireDAC.Model,
+  UnitQuery.FireDAC.Model,
+  UnitFactory.Conexao.FireDAC,
+  UnitFuncoesComuns,
+  UnitContrassenha.Model,
+  Cripto;
+
+
+type
+  TControllerContrassenhas = class
+    class procedure Registrar(App: THorse);
+    class procedure Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+  end;
+
+implementation
+
+{ TControllerContrassenhas }
+
+class procedure TControllerContrassenhas.Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  oJson: TJSONObject;
+  aJson: TJSONArray;
+  Fabrica: iFactoryConexao;
+  Conexao: iConexao;
+  Query: iQuery;
+  Dados: TDataSource;
+begin
+  aJson := TJSONArray.Create;
+  // componentes de conexao
+  Fabrica := TFactoryConexaoFireDAC.New;
+  Conexao := Fabrica.Conexao('portalsoft.sytes.net:/home/Portal/Dados/PORTAL.FDB');
+  Query := Fabrica.Query(Conexao);
+  Dados := TDataSource.Create(nil);
+  Query.DataSource(Dados);
+  Query.Add('SELECT LIC_CODIGO, LIC_SENHA, LIC_CONTRA_SENHA, LIC_DATA_USO, LIC_PC, LIC_NOME_CLIENTE, LIC_NUM_USOS, COUNT(ACE_SENHA) NUM_PCS');
+  Query.Add('FROM LICENCAS LEFT JOIN ACESSOS ON LIC_SENHA = ACE_SENHA');
+  Query.Add('GROUP BY LIC_CODIGO, LIC_SENHA, LIC_CONTRA_SENHA, LIC_DATA_USO, LIC_PC, LIC_NOME_CLIENTE, LIC_NUM_USOS');
+  Query.Add('ORDER BY LIC_NOME_CLIENTE');
+  Query.Open;
+  Dados.DataSet.First;
+  while not Dados.DataSet.Eof do
+  begin
+    oJson := TJSONObject.Create;
+    oJson.AddPair('codigo', Dados.DataSet.FieldByName('LIC_CODIGO').AsString);
+    oJson.AddPair('senha', Dados.DataSet.FieldByName('LIC_SENHA').AsString);
+    oJson.AddPair('contra_senha', Dados.DataSet.FieldByName('LIC_CONTRA_SENHA').AsString);
+    oJson.AddPair('data_uso', Dados.DataSet.FieldByName('LIC_DATA_USO').AsString);
+    oJson.AddPair('pc', Dados.DataSet.FieldByName('LIC_PC').AsString);
+    oJson.AddPair('nome_cliente', Dados.DataSet.FieldByName('LIC_NOME_CLIENTE').AsString);
+    oJson.AddPair('num_usos', Dados.DataSet.FieldByName('LIC_NUM_USOS').AsString);
+    oJson.AddPair('pcs', Dados.DataSet.FieldByName('NUM_PCS').AsString);
+    aJson.AddElement(oJson);
+    Dados.DataSet.Next;
+  end;
+  Res.Status(200);
+  Res.Send<TJSONArray>(aJson);
+end;
+
+class procedure TControllerContrassenhas.Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  oJson: TJSONObject;
+  Codigo: integer;
+  Contrassenha: string;
+  oContrassenha: TContrassenha;
+  Fabrica: iFactoryConexao;
+  Conexao: iConexao;
+  Query: iQuery;
+begin
+  oJson := TJSONObject.Create;
+  if Req.Body <> '' then
+  begin
+    try
+      oContrassenha := TContrassenha.FromJsonString(Req.Body);
+      Fabrica := TFactoryConexaoFireDAC.New;
+      Conexao  := Fabrica.Conexao('firebird.db5.net2.com.br:/firebird/portalsoft2.gdb', 'portalsoft2', 'portal3694');
+      Query    := Fabrica.Query(Conexao);
+      Contrassenha := PreparaCriptografia(oContrassenha.senha+oContrassenha.limite.Replace('/', ''), 0);
+      Query.Add(Format('UPDATE LICENCAS SET LIC_SENHA = %s LIC_CONTRA_SENHA = %s WHERE LIC_CODIGO = %d', [oContrassenha.senha.QuotedString, Contrassenha.QuotedString, oContrassenha.codigo]));
+      Query.ExecSQL;
+    except
+      on E: exception do
+      begin
+        raise exception.Create('Erro ao inserir contrassenha' + E.Message);
+      end
+    end;
+    Res.Status(200);
+    oJson.AddPair('Ok', 'Contrassenha atualizada!');
+    Res.Send<TJSONObject>(oJson);
+  end
+  else
+  begin
+    Res.Status(401);
+    oJson.AddPair('Erro', 'Senha ou data limete não informada corretamente!');
+    Res.Send<TJSONObject>(oJson);
+  end;
+end;
+
+class procedure TControllerContrassenhas.Registrar(App: THorse);
+begin
+  App.Get('/contrassenha', Get);
+  App.Get('/contrassenha', Post);
+end;
+
+end.
