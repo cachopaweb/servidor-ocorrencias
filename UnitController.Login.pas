@@ -12,7 +12,7 @@ uses
   UnitConexao.FireDAC.Model,
   UnitQuery.FireDAC.Model,
   UnitFactory.Conexao.FireDAC,
-  UnitFuncoesComuns;
+  UnitFuncoesComuns, UnitConstantes;
 
 
 type
@@ -42,19 +42,21 @@ begin
   try
     // componentes de conexao
     Fabrica := TFactoryConexaoFireDAC.New;
-    Conexao := Fabrica.Conexao('portalsoft.sytes.net:/home/Portal/Dados/PORTAL.FDB');
+    Conexao := Fabrica.Conexao(TConstants.BancoDados);
     Query := Fabrica.Query(Conexao);
     Dados := TDataSource.Create(nil);
     Query.DataSource(Dados);
-    Query.Add('SELECT FUN_CODIGO, USU_LOGIN FROM USUARIOS JOIN FUNCIONARIOS ON USU_FUN = FUN_CODIGO AND FUN_ESTADO = ''ATIVO''');
+    Query.Add('SELECT FUN_CODIGO, USU_LOGIN, FUN_CATEGORIA, USU_CODIGO FROM USUARIOS JOIN FUNCIONARIOS ON USU_FUN = FUN_CODIGO AND FUN_ESTADO = ''ATIVO''');
     Query.Add('ORDER BY USU_LOGIN');
     Query.Open;
     Dados.DataSet.First;
     while not Dados.DataSet.Eof do
     begin
       oJson := TJSONObject.Create;
-      oJson.AddPair('codigo', Dados.DataSet.FieldByName('FUN_CODIGO').AsString);
+      oJson.AddPair('codigo', TJSONNumber.Create(Dados.DataSet.FieldByName('FUN_CODIGO').AsInteger));
       oJson.AddPair('login', Dados.DataSet.FieldByName('USU_LOGIN').AsString);
+      oJson.AddPair('categoria', UTF8Encode(Dados.DataSet.FieldByName('FUN_CATEGORIA').AsString));
+      oJson.AddPair('usu_codigo', TJSONNumber.Create(Dados.DataSet.FieldByName('USU_CODIGO').AsInteger));
       aJson.AddElement(oJson);
       Dados.DataSet.Next;
     end;
@@ -63,7 +65,7 @@ begin
   except on E: Exception do
     begin
       Res.Status(200);
-      Res.Send<TJSONObject>(TJSONObject.Create.AddPair('Erro', 'Erro ao buscar clientes.'+sLineBreak+E.Message));
+      Res.Send<TJSONObject>(TJSONObject.Create.AddPair('Erro', 'Erro ao buscar Usuarios.'+sLineBreak+E.Message));
     end;
   end;
 end;
@@ -85,7 +87,7 @@ begin
     Usuario := TUsuarios.FromJsonString(Req.Body);
     // componentes de conexao
     Fabrica := TFactoryConexaoFireDAC.New;
-    Conexao := Fabrica.Conexao('portalsoft.sytes.net:/home/Portal/Dados/PORTAL.FDB');
+    Conexao := Fabrica.Conexao(TConstants.BancoDados);
     Query := Fabrica.Query(Conexao);
     Dados := TDataSource.Create(nil);
     Query.DataSource(Dados);

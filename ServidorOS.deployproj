@@ -15,9 +15,29 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
+        <DeployFile Include="Win32\Release\ServidorOS.exe" Condition="'$(Config)'=='Release'">
+            <RemoteDir>ServidorOS\</RemoteDir>
+            <RemoteName>ServidorOS.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Win64'"/>
     <ItemGroup Condition="'$(Platform)'=='Linux64'">
+        <DeployFile Include="Linux64\Release\ServidorOS" Condition="'$(Config)'=='Release'">
+            <RemoteDir>ServidorOS\</RemoteDir>
+            <RemoteName>ServidorOS</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
         <DeployFile Include="Linux64\Debug\ServidorOS" Condition="'$(Config)'=='Debug'">
             <RemoteDir>ServidorOS\</RemoteDir>
             <RemoteName>ServidorOS</RemoteName>

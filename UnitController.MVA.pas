@@ -12,7 +12,7 @@ uses
   UnitConexao.FireDAC.Model,
   UnitQuery.FireDAC.Model,
   UnitFactory.Conexao.FireDAC,
-  UnitFuncoesComuns;
+  UnitFuncoesComuns, UnitConstantes;
 
 
 type
@@ -37,7 +37,7 @@ begin
   aJson := TJSONArray.Create;
   // componentes de conexao
   Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao('portalsoft.sytes.net:/home/Portal/Dados/PORTAL.FDB');
+  Conexao := Fabrica.Conexao(TConstants.BancoDados);
   Query := Fabrica.Query(Conexao);
   Dados := TDataSource.Create(nil);
   Query.DataSource(Dados);

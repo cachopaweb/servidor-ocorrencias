@@ -13,7 +13,7 @@ uses
   UnitFactory.Conexao.FireDAC,
   UnitFuncoesComuns,
   UnitContrassenha.Model,
-  Cripto;
+  Cripto, UnitConstantes;
 
 
 type
@@ -35,11 +35,13 @@ var
   Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
+  Senha: string;
+  DataLimite: string;
 begin
   aJson := TJSONArray.Create;
   // componentes de conexao
   Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao('portalsoft.sytes.net:/home/Portal/Dados/PORTAL.FDB');
+  Conexao := Fabrica.Conexao('firebird.db5.net2.com.br:/firebird/portalsoft2.gdb', 'PORTALSOFT2', 'portal3694');
   Query := Fabrica.Query(Conexao);
   Dados := TDataSource.Create(nil);
   Query.DataSource(Dados);
@@ -60,6 +62,9 @@ begin
     oJson.AddPair('nome_cliente', Dados.DataSet.FieldByName('LIC_NOME_CLIENTE').AsString);
     oJson.AddPair('num_usos', Dados.DataSet.FieldByName('LIC_NUM_USOS').AsString);
     oJson.AddPair('pcs', Dados.DataSet.FieldByName('NUM_PCS').AsString);
+    Senha      := Cripto.PreparaDescriptografia(Dados.DataSet.FieldByName('LIC_CONTRA_SENHA').AsString, 0);
+    DataLimite := Copy(Senha, 7, 2) + '/' + Copy(Senha, 9, 2) + '/' + Copy(Senha, 11, 2);
+    oJson.AddPair('data_limite', DataLimite);
     aJson.AddElement(oJson);
     Dados.DataSet.Next;
   end;
@@ -83,7 +88,7 @@ begin
     try
       oContrassenha := TContrassenha.FromJsonString(Req.Body);
       Fabrica := TFactoryConexaoFireDAC.New;
-      Conexao  := Fabrica.Conexao('firebird.db5.net2.com.br:/firebird/portalsoft2.gdb', 'portalsoft2', 'portal3694');
+      Conexao  := Fabrica.Conexao(TConstants.BancoDados);
       Query    := Fabrica.Query(Conexao);
       Contrassenha := PreparaCriptografia(oContrassenha.senha+oContrassenha.limite.Replace('/', ''), 0);
       Query.Add(Format('UPDATE LICENCAS SET LIC_SENHA = %s LIC_CONTRA_SENHA = %s WHERE LIC_CODIGO = %d', [oContrassenha.senha.QuotedString, Contrassenha.QuotedString, oContrassenha.codigo]));
@@ -109,7 +114,7 @@ end;
 class procedure TControllerContrassenhas.Registrar(App: THorse);
 begin
   App.Get('/contrassenha', Get);
-  App.Get('/contrassenha', Post);
+  App.Post('/contrassenha', Post);
 end;
 
 end.
