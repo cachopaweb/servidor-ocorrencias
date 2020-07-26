@@ -8,17 +8,32 @@ uses
 {$M+}
 
 type
+  TBacklog = class
+  private
+    FContent: string;
+    FId: integer;
+    FLabels: TArray<string>;
+    FUser: string;
+  published
+    property Content: string read FContent write FContent;
+    property Id: integer read FId write FId;
+    property Labels: TArray<string> read FLabels write FLabels;
+    property User: string read FUser write FUser;
+  end;
+
   TCards = class
   private
     FContent: string;
     FId: Integer;
     FLabels: TArray<string>;
     FUser: string;
+    FBacklogs: TArray<TBacklog>;
   published
     property Content: string read FContent write FContent;
     property Id: Integer read FId write FId;
     property Labels: TArray<string> read FLabels write FLabels;
     property User: string read FUser write FUser;
+    property Backlogs: TArray<TBacklog> read FBacklogs write FBacklogs;
   end;
 
   TItem = class
@@ -27,11 +42,13 @@ type
     FTitle: string;
     FCreateBacklog: Boolean;
     FCreateSprint: Boolean;
+    FEhSprint: Boolean;
   published
     property Cards: TArray<TCards> read FCards write FCards;
     property Title: string read FTitle write FTitle;
     property CreateBacklog: Boolean read FCreateBacklog write FCreateBacklog;
     property CreateSprint: Boolean read FCreateSprint write FCreateSprint;
+    property EhSprint: Boolean read FEhSprint write FEhSprint;
   end;
 
   TQuadroScrum = class

@@ -8,7 +8,7 @@ interface
 implementation
 
 const
-  BD_Teste: string = 'D:/Projetos/Operacional Portal/Dados/PORTAL.FDB';
+  BD_Teste: string = 'E:/Projetos/Delphi/Ocorrencias Portal/Dados/PORTAL.FDB';
   BD_Producao: string = '/home/Portal/Dados/PORTAL.FDB';
 
 { TConstants }

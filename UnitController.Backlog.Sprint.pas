@@ -20,6 +20,8 @@ type
     class procedure Registrar(App: THorse);
     class procedure Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
     class procedure Put(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure PostSprintBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure DeleteSprintBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
   end;
 
 implementation
@@ -28,6 +30,40 @@ implementation
 
 uses UnitBacklog.Sprint.Model;
 
+
+class procedure TControllerBacklogSprint.DeleteSprintBacklog(Req: THorseRequest;
+  Res: THorseResponse; Next: TProc);
+var
+  oJson: TJSONObject;
+  Fabrica: iFactoryConexao;
+  Conexao: iConexao;
+  Query: iQuery;
+  Dados: TDataSource;
+  Codigo: Integer;
+begin
+  // componentes de conexao
+  Fabrica := TFactoryConexaoFireDAC.New;
+  Conexao := Fabrica.Conexao(TConstants.BancoDados);
+  Query := Fabrica.Query(Conexao);
+  Dados := TDataSource.Create(nil);
+  Query.DataSource(Dados);
+  oJson := TJSONObject.Create;
+  Codigo := Req.Params.Items['id'].ToInteger;
+  try
+    Query.Add('DELETE FROM BS_BP WHERE (BB_CODIGO = :CODIGO)');
+    Query.AddParam('CODIGO', Codigo);
+    Query.ExecSQL;
+    Res.Status(THTTPStatus.NoContent);
+  except
+    on E: exception do
+    begin
+      raise exception.Create('Erro ao deletar sprint backlog' + E.Message);
+      Res.Status(THTTPStatus.BadRequest);
+      oJson.AddPair('Error', 'Sprint backlog não informado corretamente!'+sLineBreak+e.Message);
+      Res.Send<TJSONObject>(oJson);
+    end
+  end;
+end;
 
 class procedure TControllerBacklogSprint.Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
@@ -90,6 +126,53 @@ var
   Dados: TDataSource;
   CodigoBS_BP: Integer;
   CodigoSprint: Integer;
+  BacklogSprint: TBacklogSprint;
+begin
+  // componentes de conexao
+  Fabrica := TFactoryConexaoFireDAC.New;
+  Conexao := Fabrica.Conexao(TConstants.BancoDados);
+  Query := Fabrica.Query(Conexao);
+  Dados := TDataSource.Create(nil);
+  Query.DataSource(Dados);
+  oJson := TJSONObject.Create;
+  if Req.Body <> '' then
+  begin
+    CodigoSprint := Req.Params.Items['id'].ToInteger;
+    BacklogSprint := TBacklogSprint.FromJsonString(Req.Body);
+    try
+      Query.Add('UPDATE BACKLOG_SPRINT SET BS_ESTADO = :ESTADO WHERE (BS_CODIGO = :CODIGO)');
+      Query.AddParam('ESTADO', BacklogSprint.Estado);
+      Query.AddParam('CODIGO', CodigoSprint);
+      Query.ExecSQL;
+      oJson.AddPair('NOVO ESTADO', BacklogSprint.Estado);
+      Res.Send<TJSONObject>(oJson).Status(THTTPStatus.Created);
+    except
+      on E: exception do
+      begin
+        raise exception.Create('Erro ao inserir Sprint' + E.Message);
+        Res.Status(THTTPStatus.BadRequest);
+        oJson.AddPair('Error', 'Sprint não informado corretamente!'+sLineBreak+e.Message);
+        Res.Send<TJSONObject>(oJson);
+      end
+    end;
+  end
+  else
+  begin
+    Res.Status(THTTPStatus.BadRequest);
+    oJson.AddPair('Error', 'Sprint não encontrado!');
+    Res.Send<TJSONObject>(oJson);
+  end;
+end;
+
+class procedure TControllerBacklogSprint.PostSprintBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  oJson: TJSONObject;
+  Fabrica: iFactoryConexao;
+  Conexao: iConexao;
+  Query: iQuery;
+  Dados: TDataSource;
+  CodigoBS_BP: Integer;
+  CodigoSprint: Integer;
   BacklogProduto: TBacklogProduto;
 begin
   // componentes de conexao
@@ -135,7 +218,9 @@ end;
 class procedure TControllerBacklogSprint.Registrar(App: THorse);
 begin
   App.Post('/sprint', Post);
-  App.Post('/sprint/:id', Put);
+  App.Put('/sprint/:id', Put);
+  App.Post('/sprint_backlog/:id', PostSprintBacklog);
+  App.Delete('/sprint_backlog/:id', DeleteSprintBacklog);
 end;
 
 end.
