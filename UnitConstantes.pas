@@ -8,14 +8,14 @@ interface
 implementation
 
 const
-  BD_Teste: string = 'E:/Projetos/Delphi/Ocorrencias Portal/Dados/PORTAL.FDB';
+  BD_Teste: string = 'D:/PROJETOS/Operacional Portal/Dados/PORTAL.FDB';
   BD_Producao: string = '/home/Portal/Dados/PORTAL.FDB';
 
 { TConstants }
 
 class function TConstants.BancoDados: string;
 begin
-  Result := BD_Teste;
+  Result := BD_Producao;
 end;
 
 end.

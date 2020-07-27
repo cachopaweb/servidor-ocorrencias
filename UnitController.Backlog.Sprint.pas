@@ -34,12 +34,12 @@ uses UnitBacklog.Sprint.Model;
 class procedure TControllerBacklogSprint.DeleteSprintBacklog(Req: THorseRequest;
   Res: THorseResponse; Next: TProc);
 var
-  oJson: TJSONObject;
   Fabrica: iFactoryConexao;
   Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
   Codigo: Integer;
+  oJson: TJSONObject;
 begin
   // componentes de conexao
   Fabrica := TFactoryConexaoFireDAC.New;
@@ -47,7 +47,6 @@ begin
   Query := Fabrica.Query(Conexao);
   Dados := TDataSource.Create(nil);
   Query.DataSource(Dados);
-  oJson := TJSONObject.Create;
   Codigo := Req.Params.Items['id'].ToInteger;
   try
     Query.Add('DELETE FROM BS_BP WHERE (BB_CODIGO = :CODIGO)');
@@ -59,6 +58,7 @@ begin
     begin
       raise exception.Create('Erro ao deletar sprint backlog' + E.Message);
       Res.Status(THTTPStatus.BadRequest);
+      oJson := TJSONObject.Create;
       oJson.AddPair('Error', 'Sprint backlog não informado corretamente!'+sLineBreak+e.Message);
       Res.Send<TJSONObject>(oJson);
     end
@@ -92,7 +92,7 @@ begin
       Query.AddParam('CODIGO', codigo);
       Query.AddParam('CONTEUDO', BacklogSprint.Conteudo);
       Query.AddParam('DATA_SPRINT', Date);
-      Query.AddParam('DATA_ENT_PROG', BacklogSprint.DataEntregaProgramacao);
+      Query.AddParam('DATA_ENT_PROG', FormatarData(BacklogSprint.DataEntregaProgramacao));
       Query.AddParam('ESTADO', BacklogSprint.Estado);
       Query.AddParam('DESCRICAO', BacklogSprint.Descricao);
       Query.AddParam('COD_PROJETO', BacklogSprint.Cod_Projeto_Scrum);
@@ -124,7 +124,6 @@ var
   Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
-  CodigoBS_BP: Integer;
   CodigoSprint: Integer;
   BacklogSprint: TBacklogSprint;
 begin

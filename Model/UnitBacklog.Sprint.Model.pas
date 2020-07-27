@@ -10,8 +10,8 @@ type
     FCodigo  : integer;
     FConteudo: string;
     FDataSprint: TDateTime;
-    FDataEntregaProgramacao: TDateTime;
-    FDataEntregaReal: TDateTime;
+    FDataEntregaProgramacao: string;
+    FDataEntregaReal: string;
     FEstado: string;
     FDescricao: String;
     FCod_Projeto_Scrum: integer;
@@ -19,8 +19,8 @@ type
     property Codigo  : integer read FCodigo write FCodigo;
     property Conteudo: string read FConteudo write FConteudo;
     property DataSprint: TDateTime read FDataSprint write FDataSprint;
-    property DataEntregaProgramacao: TDateTime read FDataEntregaProgramacao write FDataEntregaProgramacao;
-    property DataEntregaReal: TDateTime read FDataEntregaReal write FDataEntregaReal;
+    property DataEntregaProgramacao: string read FDataEntregaProgramacao write FDataEntregaProgramacao;
+    property DataEntregaReal: string read FDataEntregaReal write FDataEntregaReal;
     property Estado: string read FEstado write FEstado;
     property Descricao: String read FDescricao write FDescricao;
     property Cod_Projeto_Scrum: integer read FCod_Projeto_Scrum write FCod_Projeto_Scrum;
