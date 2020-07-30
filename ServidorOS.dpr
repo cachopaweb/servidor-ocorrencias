@@ -15,11 +15,6 @@ uses
   System.Json,
   UnitConstantes in 'UnitConstantes.pas',
   UnitLogin.Model in 'Model\UnitLogin.Model.pas',
-  UnitConexao.Model.Interfaces in '..\..\..\FormsComuns\Classes\Fabrica Conexao\UnitConexao.Model.Interfaces.pas',
-  UnitOcorrencia.Model in 'Model\UnitOcorrencia.Model.pas',
-  UnitConexao.FireDAC.Model in '..\..\..\FormsComuns\Classes\Fabrica Conexao\FireDAC\UnitConexao.FireDAC.Model.pas',
-  UnitQuery.FireDAC.Model in '..\..\..\FormsComuns\Classes\Fabrica Conexao\FireDAC\UnitQuery.FireDAC.Model.pas',
-  UnitFactory.Conexao.FireDAC in '..\..\..\FormsComuns\Classes\Fabrica Conexao\FireDAC\UnitFactory.Conexao.FireDAC.pas',
   Cripto in 'Model\Cripto.pas',
   UnitContrassenha.Model in 'Model\UnitContrassenha.Model.pas',
   UnitOrdens.Model in 'Model\UnitOrdens.Model.pas',
@@ -37,7 +32,8 @@ uses
   UnitQuadroScrum.Model in 'Model\UnitQuadroScrum.Model.pas',
   UnitController.QuadroScrum in 'UnitController.QuadroScrum.pas',
   UnitController.Backlog.Sprint in 'UnitController.Backlog.Sprint.pas',
-  UnitBacklog.Sprint.Model in 'Model\UnitBacklog.Sprint.Model.pas';
+  UnitBacklog.Sprint.Model in 'Model\UnitBacklog.Sprint.Model.pas',
+  UnitOcorrencia.Model in 'Model\UnitOcorrencia.Model.pas';
 
 var
   App: THorse;

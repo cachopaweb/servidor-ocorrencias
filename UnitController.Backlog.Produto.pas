@@ -49,8 +49,8 @@ begin
     Backlog := TBacklogProduto.FromJsonString(Req.Body);
     try
       Codigo := GeraCodigo('BACKLOG_P', 'BP_CODIGO');
-      Query.Add('INSERT INTO BACKLOG_P (BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, BP_DATA_BACKLOG, BP_PS, BP_ESTADO, BP_DATA_ENT, BP_FUN)');
-      Query.Add('VALUES (:CODIGO, :DESCRICAO, :NECESSIDADE, :DATA_BACKLOG, :PS, :ESTADO, :DATA_ENT, :FUN)');
+      Query.Add('INSERT INTO BACKLOG_P (BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, BP_DATA_BACKLOG, BP_PS, BP_ESTADO, BP_DATA_ENT, BP_FUN, BP_OCORRENCIA)');
+      Query.Add('VALUES (:CODIGO, :DESCRICAO, :NECESSIDADE, :DATA_BACKLOG, :PS, :ESTADO, :DATA_ENT, :FUN, :COD_OCORRENCIA)');
       Query.AddParam('CODIGO', Codigo);
       Query.AddParam('DESCRICAO', Backlog.Descricao);
       Query.AddParam('NECESSIDADE', Backlog.Necessidade);
@@ -59,6 +59,7 @@ begin
       Query.AddParam('PS', Backlog.Cod_Projeto_Scrum);
       Query.AddParam('DATA_ENT', Backlog.DataEntrega);
       Query.AddParam('FUN', Backlog.Funcionario);
+      Query.AddParam('COD_OCORRENCIA', Backlog.Ocorrencia);
       Query.ExecSQL;
       oJson.AddPair('BACKLOG', Codigo.ToString);
       Res.Send<TJSONObject>(oJson).Status(THTTPStatus.Created);

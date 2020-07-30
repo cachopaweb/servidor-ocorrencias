@@ -38,17 +38,29 @@ var
   Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
+  projeto_scrum: Integer;
 begin
   aJson := TJSONArray.Create;
+  projeto_scrum := 0;
+  if Req.Query.Count > 0 then
+    projeto_scrum := Req.Query.Items['projeto_id'].ToInteger;
   // componentes de conexao
   Fabrica := TFactoryConexaoFireDAC.New;
   Conexao := Fabrica.Conexao(TConstants.BancoDados);
   Query := Fabrica.Query(Conexao);
   Dados := TDataSource.Create(nil);
   Query.DataSource(Dados);
-  Query.Open('SELECT CLI_NOME, OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, '
-            +'OO_SYS_MOD, OO_FINALIZADA, OO_OBS, FUN_NOME, OO_FUN_ATENDENTE, (SELECT FUN_NOME FROM FUNCIONARIOS WHERE OO_FUN_ATENDENTE = FUN_CODIGO) ATENDENTE FROM OCORRENCIAS_OS INNER JOIN CONTRATOS ON OO_CONT = CONT_CODIGO '
-            +'INNER JOIN CLIENTES ON CLI_CODIGO = CONT_CLI JOIN FUNCIONARIOS ON OO_FUN = FUN_CODIGO WHERE OO_FINALIZADA IS NULL');
+  Query.Clear;
+  Query.Add('SELECT CLI_NOME, OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_PROJETO_SCRUM, ');
+  Query.Add('OO_SYS_MOD, OO_FINALIZADA, OO_OBS, FUN_NOME, OO_FUN_ATENDENTE, (SELECT FUN_NOME FROM FUNCIONARIOS WHERE OO_FUN_ATENDENTE = FUN_CODIGO) ATENDENTE FROM OCORRENCIAS_OS INNER JOIN CONTRATOS ON OO_CONT = CONT_CODIGO ');
+  Query.Add('INNER JOIN CLIENTES ON CLI_CODIGO = CONT_CLI JOIN FUNCIONARIOS ON OO_FUN = FUN_CODIGO WHERE OO_FINALIZADA IS NULL');
+  if projeto_scrum > 0 then
+  begin
+    Query.Add('AND OO_PROJETO_SCRUM = :PROJETO_SCRUM ');
+    Query.AddParam('PROJETO_SCRUM', projeto_scrum);
+  end;
+  Query.Add('ORDER BY OO_CODIGO DESC');
+  Query.Open();
   Dados.DataSet.First;
   while not Dados.DataSet.Eof do
   begin
@@ -65,6 +77,7 @@ begin
     Ocorrencia.fun_nome       := Dados.DataSet.FieldByName('FUN_NOME').AsString;
     Ocorrencia.atendente      := Dados.DataSet.FieldByName('OO_FUN_ATENDENTE').AsInteger;
     Ocorrencia.fun_atendente  := Dados.DataSet.FieldByName('ATENDENTE').AsString;
+    Ocorrencia.projeto_scrum  := Dados.DataSet.FieldByName('OO_PROJETO_SCRUM').AsInteger;
     oJson := TJSONObject.ParseJSONValue(TEncoding.ANSI.GetBytes(Ocorrencia.ToJsonString), 0) as TJSONObject;
     aJson.AddElement(oJson);
     Dados.DataSet.Next;
@@ -91,7 +104,7 @@ begin
   Query := Fabrica.Query(Conexao);
   Dados := TDataSource.Create(nil);
   Query.DataSource(Dados);
-  Query.Add('SELECT FIRST 50 CLI_NOME, OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_DATA_FINALIZADA,');
+  Query.Add('SELECT FIRST 50 CLI_NOME, OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_DATA_FINALIZADA, OO_PROJETO_SCRUM, ');
   Query.Add('OO_SYS_MOD, OO_FINALIZADA, OO_OBS, FUN_NOME, OO_FUN_ATENDENTE,');
   Query.Add('(SELECT FUN_NOME FROM FUNCIONARIOS WHERE OO_FUN_ATENDENTE = FUN_CODIGO) ATENDENTE,');
   Query.Add('CASE WHEN ORD_CODIGO > 0 THEN ''SIM'' ELSE ''NAO'' END ABRIU_OS');
@@ -133,6 +146,7 @@ begin
     Ocorrencia.atendente      := Dados.DataSet.FieldByName('OO_FUN_ATENDENTE').AsInteger;
     Ocorrencia.fun_atendente  := Dados.DataSet.FieldByName('ATENDENTE').AsString;
     Ocorrencia.abriuOS        := Dados.DataSet.FieldByName('ABRIU_OS').AsString;
+    Ocorrencia.projeto_scrum  := Dados.DataSet.FieldByName('OO_PROJETO_SCRUM').AsInteger;
     oJson := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(Ocorrencia.ToJsonString), 0) as TJSONObject;
     aJson.AddElement(oJson);
     Dados.DataSet.Next;
@@ -163,8 +177,8 @@ begin
     Ocorrencia := TOcorrencia.FromJsonString(Req.Body);
     try
       Codigo := GeraCodigo('OCORRENCIAS_OS', 'OO_CODIGO');
-      Query.Add('INSERT INTO OCORRENCIAS_OS (OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_SYS_MOD, OO_FINALIZADA, OO_OBS) ');
-      Query.Add('VALUES (:CODIGO, :DATA, :FUNCIONARIO, :OCORRENCIA, :CONTRATO, :MODULO, :FINALIZADA, :OBS)');
+      Query.Add('INSERT INTO OCORRENCIAS_OS (OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_SYS_MOD, OO_FINALIZADA, OO_OBS, OO_PROJETO_SCRUM) ');
+      Query.Add('VALUES (:CODIGO, :DATA, :FUNCIONARIO, :OCORRENCIA, :CONTRATO, :MODULO, :FINALIZADA, :OBS, :PROJETO_SCRUM)');
       Query.AddParam('CODIGO', Codigo);
       Query.AddParam('DATA', Date);
       Query.AddParam('FUNCIONARIO', Ocorrencia.funcionario);
@@ -172,6 +186,7 @@ begin
       Query.AddParam('CONTRATO', Ocorrencia.contrato);
       Query.AddParam('MODULO', Ocorrencia.Modulo_Sistema);
       Query.AddParam('OBS', Ocorrencia.Obs);
+      Query.AddParam('PROJETO_SCRUM', Ocorrencia.projeto_scrum);
       if Ocorrencia.finalizada <> '' then
         Query.AddParam('FINALIZADA', Ocorrencia.Finalizada)
       else
@@ -263,6 +278,7 @@ begin
   App.Get('/OcorrenciasFinalizadas', GetFinalizadas);
   App.Post('/Ocorrencias', Post);
   App.Put('/Ocorrencias/:id', Put);
+  App.Get('/Ocorrencias/:projeto_id', Get);
 end;
 
 end.

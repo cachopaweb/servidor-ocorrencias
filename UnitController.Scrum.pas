@@ -41,13 +41,13 @@ begin
   Dados := TDataSource.Create(nil);
   Query.DataSource(Dados);
   aJson := TJSONArray.Create;
-  Query.Open('SELECT PS_CODIGO, CLI_NOME, PS_NOME, CONT_CODIGO FROM PROJETO_SCRUM INNER JOIN CONTRATOS ON PS_CONT = CONT_CODIGO INNER JOIN CLIENTES ON CONT_CLI = CLI_CODIGO');
+  Query.Open('SELECT PS_CODIGO, CLI_NOME, PS_NOME, CONT_CODIGO FROM PROJETO_SCRUM INNER JOIN CONTRATOS ON PS_CONT = CONT_CODIGO INNER JOIN CLIENTES ON CONT_CLI = CLI_CODIGO ORDER BY CLI_NOME');
   Dados.DataSet.First;
   while not Dados.DataSet.Eof do
   begin
     oJson := TJSONObject.Create;
     oJson.AddPair('ps_codigo', TJSONNumber.Create(Dados.DataSet.FieldByName('PS_CODIGO').AsInteger));
-    oJson.AddPair('cli_nome', Dados.DataSet.FieldByName('CLI_NOME').AsString);
+    oJson.AddPair('cli_nome', UTF8Encode(Dados.DataSet.FieldByName('CLI_NOME').AsString));
     oJson.AddPair('ps_nome', Dados.DataSet.FieldByName('PS_NOME').AsString);
     oJson.AddPair('contrato', TJSONNumber.Create(Dados.DataSet.FieldByName('CONT_CODIGO').AsInteger));
     aJson.AddElement(oJson);

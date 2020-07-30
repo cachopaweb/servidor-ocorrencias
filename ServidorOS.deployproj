@@ -4,7 +4,18 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup/>
-    <ItemGroup Condition="'$(Platform)'=='Win32'"/>
+    <ItemGroup Condition="'$(Platform)'=='Win32'">
+        <DeployFile Include="ServidorOS.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>ServidorOS\</RemoteDir>
+            <RemoteName>ServidorOS.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+    </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Win64'"/>
     <ItemGroup Condition="'$(Platform)'=='Linux64'">
         <DeployFile Include="ServidorOS" Condition="'$(Config)'=='Debug'">

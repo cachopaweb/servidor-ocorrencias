@@ -5,7 +5,7 @@
 		"github.com/hashload/horse": {
 			"name": "horse",
 			"version": "1.7.8",
-			"hash": "7f82adf0188b2f66e80e7a3c603558c9",
+			"hash": "61c14ec8566ece3650007c1f3f305d05",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -13,7 +13,7 @@
 		"github.com/hashload/horse-cors": {
 			"name": "horse-cors",
 			"version": "1.0.2",
-			"hash": "f1fd91acb4d43c9a778249d447027f16",
+			"hash": "e49cf234be7745b2c2391a82737a7007",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -21,7 +21,15 @@
 		"github.com/hashload/jhonson": {
 			"name": "jhonson",
 			"version": "1.0.5",
-			"hash": "34d01183ef1b6af802c7e132adedeae5",
+			"hash": "3c277c585eae51b73130c00c9324f991",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"https://github.com/cachopaweb/factory-conection": {
+			"name": "factory-conection",
+			"version": "master",
+			"hash": "e43b8d0d8715c704422f26eb6f770c1c",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -29,7 +37,7 @@
 		"https://github.com/hashload/handle-exception": {
 			"name": "handle-exception",
 			"version": "0.1.4",
-			"hash": "1152772d75f59dbb562cc7b7711a8ebe",
+			"hash": "2f7ff82ecc0ae0f2abf847924981dc4f",
 			"artifacts": {},
 			"failed": false,
 			"changed": false

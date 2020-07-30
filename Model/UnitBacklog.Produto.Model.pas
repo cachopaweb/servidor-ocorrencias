@@ -15,6 +15,7 @@ type
     FDataEntregaReal: TDateTime;
     FDataEntrega: TDateTime;
     FFuncionario: integer;
+    FOcorrencia: integer;
   public
     property Codigo     : integer read FCodigo write FCodigo;
     property Descricao  : string read FDescricao write FDescricao;
@@ -25,6 +26,7 @@ type
     property DataEntregaReal: TDateTime read FDataEntregaReal write FDataEntregaReal;
     property DataEntrega: TDateTime read FDataEntrega write FDataEntrega;
     property Funcionario: integer read FFuncionario write FFuncionario;
+    property Ocorrencia: integer read FOcorrencia write FOcorrencia;
     function ToJsonString: string;
     class function FromJsonString(Value: string): TBacklogProduto;
   end;

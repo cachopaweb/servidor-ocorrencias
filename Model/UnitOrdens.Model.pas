@@ -25,6 +25,7 @@ type
     Fprioridade: integer;
     Fcodigo_ocorrencia: integer;
     Fos_modulo: integer;
+    FcodSprint: integer;
   public
     function ToJsonString: string;
     class function FromJsonString(Value: string): TModelOrdens;
@@ -46,6 +47,7 @@ type
     property prioridade: integer read Fprioridade write Fprioridade;
     property codigo_ocorrencia: integer read Fcodigo_ocorrencia write Fcodigo_ocorrencia;
     property os_modulo: integer read Fos_modulo write Fos_modulo;
+    property codSprint: integer read FcodSprint write FcodSprint;
   end;
 
 implementation

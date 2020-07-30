@@ -31,6 +31,7 @@ type
     FTempoAtendimento: Integer;
     FDataFinalizada  : string;
     FabriuOS         : string;
+    Fprojeto_scrum   : Integer;
   public
     property codigo          : Integer read Fcodigo write Fcodigo;
     property data            : String read FData write FData;
@@ -47,6 +48,7 @@ type
     property TempoAtendimento: Integer read FTempoAtendimento write FTempoAtendimento;
     property DataFinalizada  : string read FDataFinalizada write FDataFinalizada;
     property abriuOS         : string read FabriuOS write FabriuOS;
+    property projeto_scrum   : Integer read Fprojeto_scrum write Fprojeto_scrum;
     function ToJsonString: string;
     class function FromJsonString(AJsonString: string): TOcorrencia;
   end;

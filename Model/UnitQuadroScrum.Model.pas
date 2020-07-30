@@ -15,12 +15,14 @@ type
     FLabels: TArray<string>;
     FUser: string;
     Fbb_codigo: integer;
+    FOcorrencia: integer;
   published
     property Content: string read FContent write FContent;
     property Id: integer read FId write FId;
     property Labels: TArray<string> read FLabels write FLabels;
     property User: string read FUser write FUser;
     property bb_codigo: integer read Fbb_codigo write Fbb_codigo;
+    property Ocorrencia: integer read FOcorrencia write FOcorrencia;
   end;
 
   TCards = class
@@ -31,6 +33,8 @@ type
     FUser: string;
     FBacklogs: TArray<TBacklog>;
     FDataEntrega: string;
+    FOcorrencia: integer;
+    FOrdem: integer;
   published
     property Content: string read FContent write FContent;
     property Id: Integer read FId write FId;
@@ -38,6 +42,8 @@ type
     property User: string read FUser write FUser;
     property Backlogs: TArray<TBacklog> read FBacklogs write FBacklogs;
     property DataEntrega: string read FDataEntrega write FDataEntrega;
+    property Ocorrencia: integer read FOcorrencia write FOcorrencia;
+    property Ordem: integer read FOrdem write FOrdem;
   end;
 
   TItem = class
