@@ -33,7 +33,8 @@ uses
   UnitController.QuadroScrum in 'UnitController.QuadroScrum.pas',
   UnitController.Backlog.Sprint in 'UnitController.Backlog.Sprint.pas',
   UnitBacklog.Sprint.Model in 'Model\UnitBacklog.Sprint.Model.pas',
-  UnitOcorrencia.Model in 'Model\UnitOcorrencia.Model.pas';
+  UnitOcorrencia.Model in 'Model\UnitOcorrencia.Model.pas',
+  UnitHistoricoPrazoEntrega.Model in 'Model\UnitHistoricoPrazoEntrega.Model.pas';
 
 var
   App: THorse;

@@ -26,6 +26,7 @@ type
     Fcodigo_ocorrencia: integer;
     Fos_modulo: integer;
     FcodSprint: integer;
+    Fnovo_prazoe: string;
   public
     function ToJsonString: string;
     class function FromJsonString(Value: string): TModelOrdens;
@@ -48,6 +49,7 @@ type
     property codigo_ocorrencia: integer read Fcodigo_ocorrencia write Fcodigo_ocorrencia;
     property os_modulo: integer read Fos_modulo write Fos_modulo;
     property codSprint: integer read FcodSprint write FcodSprint;
+    property novo_prazoe: string read Fnovo_prazoe write Fnovo_prazoe;
   end;
 
 implementation

@@ -15,7 +15,7 @@ const
 
 class function TConstants.BancoDados: string;
 begin
-  Result := BD_Producao;
+  Result := BD_Teste;
 end;
 
 end.

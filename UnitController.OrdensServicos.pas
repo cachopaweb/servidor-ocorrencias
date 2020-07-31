@@ -1,6 +1,7 @@
 unit UnitController.OrdensServicos;
 
 interface
+
 uses
   Horse,
   Classes,
@@ -13,14 +14,14 @@ uses
   UnitConexao.FireDAC.Model,
   UnitQuery.FireDAC.Model,
   UnitFactory.Conexao.FireDAC,
-  UnitFuncoesComuns, UnitConstantes;
-
+  UnitFuncoesComuns, UnitConstantes, UnitHistoricoPrazoEntrega.Model;
 
 type
   TControllerOrdensServicos = class
     class procedure Registrar(App: THorse);
     class procedure Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
     class procedure Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure Put(Req: THorseRequest; Res: THorseResponse; Next: TProc);
   end;
 
 implementation
@@ -44,7 +45,7 @@ begin
   Query   := Fabrica.Query(Conexao);
   Dados   := TDataSource.Create(nil);
   Query.DataSource(Dados);
-  Query.Add('SELECT ORD_PRAZOE, ORD_CODIGO, CLI_NOME, ORD_DATAAB, ORD_ESTADO, ORD_OCORRENCIA, ');
+  Query.Add('SELECT ORD_PRAZOE, ORD_CODIGO, CLI_NOME, ORD_DATAAB, ORD_ESTADO, ORD_OCORRENCIA, ORD_NOVO_PRAZOE, ');
   Query.Add('CASE WHEN ORD_PRIORIDADE = 1 THEN ''BAIXA''');
   Query.Add('WHEN ORD_PRIORIDADE = 2 THEN ''MÉDIA''');
   Query.Add('ELSE ''ALTA'' END PRIORIDADE, FUN_NOME, (SELECT FUN_NOME FROM FUNCIONARIOS WHERE FUN_CODIGO = ORD_FUN1) QUEM_ABRIU');
@@ -66,6 +67,7 @@ begin
     oJson.AddPair('programador', Dados.DataSet.FieldByName('FUN_NOME').AsString);
     oJson.AddPair('quemAbriu', Dados.DataSet.FieldByName('QUEM_ABRIU').AsString);
     oJson.AddPair('ocorrencia', Dados.DataSet.FieldByName('ORD_OCORRENCIA').AsString);
+    oJson.AddPair('novo_prazoe', Dados.DataSet.FieldByName('ORD_NOVO_PRAZOE').AsString);
     aJson.AddElement(oJson);
     Dados.DataSet.Next;
   end;
@@ -88,21 +90,22 @@ begin
   if Req.Body <> '' then
   begin
     Ordens := TModelOrdens.FromJsonString(Req.Body);
-  end else
+  end
+  else
     raise Exception.Create('Ordem não passada corretamente');
   // componentes de conexao
   Fabrica := TFactoryConexaoFireDAC.New;
   Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  Codigo := GeraCodigo('ORDENS', 'ORD_CODIGO');
+  Query   := Fabrica.Query(Conexao);
+  Dados   := TDataSource.Create(nil);
+  Codigo  := GeraCodigo('ORDENS', 'ORD_CODIGO');
   Query.DataSource(Dados);
   Query.Add('INSERT INTO ORDENS (ORD_CODIGO, ORD_DATAAB, ORD_FUN1, ORD_CONT, ORD_OCORRENCIA, ORD_ANALISE, ORD_DATAAN, ORD_FUN2, ORD_FUN3, ORD_FUN4, ');
   Query.Add('ORD_DATAE, ORD_FUN5, ORD_ESTADO, ORD_NUMPROGRAMACAO, ORD_NUMTESTES, ORD_PRAZOE, ORD_DATA, ORD_HORA, ');
-  Query.Add('ORD_TIPO, ORD_DATAE_AN, ORD_DATAE_P, ORD_DATAE_T, ORD_ATENDENTE, ORD_PRIORIDADE, ORD_OCO, ORD_OS_MODULO, ORD_SPRINT)');
+  Query.Add('ORD_TIPO, ORD_DATAE_AN, ORD_DATAE_P, ORD_DATAE_T, ORD_ATENDENTE, ORD_PRIORIDADE, ORD_OCO, ORD_OS_MODULO, ORD_SPRINT, ORD_NOVO_PRAZOE )');
   Query.Add('VALUES (:ORD_CODIGO, :ORD_DATAAB, :ORD_FUN1, :ORD_CONT, :ORD_OCORRENCIA, :ORD_ANALISE, :ORD_DATAAN, :ORD_FUN2, :ORD_FUN3, :ORD_FUN4, ');
   Query.Add(':ORD_DATAE, :ORD_FUN5, :ORD_ESTADO, :ORD_NUMPROGRAMACAO, :ORD_NUMTESTES, :ORD_PRAZOE, :ORD_DATA, :ORD_HORA, ');
-  Query.Add(':ORD_TIPO, :ORD_DATAE_AN, :ORD_DATAE_P, :ORD_DATAE_T, :ORD_ATENDENTE, :ORD_PRIORIDADE, :ORD_OCO, :ORD_OS_MODULO, :ORD_SPRINT)');
+  Query.Add(':ORD_TIPO, :ORD_DATAE_AN, :ORD_DATAE_P, :ORD_DATAE_T, :ORD_ATENDENTE, :ORD_PRIORIDADE, :ORD_OCO, :ORD_OS_MODULO, :ORD_SPRINT, :ORD_NOVO_PRAZOE )');
   Query.AddParam('ORD_CODIGO', Codigo);
   Query.AddParam('ORD_DATAAB', Date);
   Query.AddParam('ORD_FUN1', Ordens.fun_Abertura);
@@ -130,15 +133,68 @@ begin
   Query.AddParam('ORD_OCO', Ordens.codigo_ocorrencia);
   Query.AddParam('ORD_OS_MODULO', Ordens.os_modulo);
   Query.AddParam('ORD_SPRINT', Ordens.codSprint);
+  Query.AddParam('ORD_NOVO_PRAZOE', FormatarData(Ordens.prazo_entrega));
   Query.ExecSQL;
   Res.Status(200);
   Res.Send<TJSONObject>(TJSONObject.Create.AddPair('ordem', Codigo.ToString));
+end;
+
+class procedure TControllerOrdensServicos.Put(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Fabrica: iFactoryConexao;
+  Conexao: iConexao;
+  Query: iQuery;
+  oJson: TJSONObject;
+  CodigoOrdem: Integer;
+  Historico: THistoricoPrazoEntrega;
+  Codigo: Integer;
+begin
+  // componentes de conexao
+  Fabrica     := TFactoryConexaoFireDAC.New;
+  Conexao     := Fabrica.Conexao(TConstants.BancoDados);
+  Query       := Fabrica.Query(Conexao);
+  oJson       := TJSONObject.Create;
+  CodigoOrdem := Req.Params.Items['id'].ToInteger;
+  if CodigoOrdem > 0 then
+  begin
+    try
+      Codigo    := GeraCodigo('HIS_PRAZO_ORDEM', 'HPO_CODIGO');
+      Historico := THistoricoPrazoEntrega.FromJsonString(Req.Body);
+      Query.Clear;
+      Query.Add('UPDATE ORDENS SET ORD_NOVO_PRAZOE = :NOVO_PRAZO WHERE ORD_CODIGO = :CODIGO ');
+      Query.AddParam('NOVO_PRAZO', FormatarData(Historico.PrazoNovo));
+      Query.AddParam('CODIGO', CodigoOrdem);
+      Query.ExecSQL;
+      // Insere Historico
+      Query.Clear;
+      Query.Add('INSERT INTO HIS_PRAZO_ORDEM (HPO_CODIGO, HPO_FUN, HPO_ORD, HPO_PRAZO_ANTERIOR, HPO_PRAZO_NOVO) ');
+      Query.Add('VALUES (:HPO_CODIGO, :HPO_FUN, :HPO_ORD, :HPO_PRAZO_ANTERIOR, :HPO_PRAZO_NOVO) ');
+      Query.AddParam('HPO_CODIGO', Codigo);
+      Query.AddParam('HPO_FUN', Historico.Funcionario);
+      Query.AddParam('HPO_ORD', Historico.Ordem);
+      Query.AddParam('HPO_PRAZO_ANTERIOR', FormatarData(Historico.PrazoAnterior));
+      Query.AddParam('HPO_PRAZO_NOVO', FormatarData(Historico.PrazoNovo));
+      Query.ExecSQL;
+      Res.Status(200);
+      oJson.AddPair('Historico', TJSONNumber.Create(Codigo));
+      Res.Send<TJSONObject>(oJson);
+    except
+      on E: Exception do
+      begin
+        raise Exception.Create('Erro ao inserir historico' + E.Message);
+        Res.Status(200);
+        oJson.AddPair('Ok', 'Historico não informado corretamente!' + sLineBreak + E.Message);
+        Res.Send<TJSONObject>(oJson);
+      end
+    end;
+  end;
 end;
 
 class procedure TControllerOrdensServicos.Registrar(App: THorse);
 begin
   App.Get('/Ordens', Get);
   App.Post('/Ordens', Post);
+  App.Put('/Ordens/:id', Put);
 end;
 
 end.
