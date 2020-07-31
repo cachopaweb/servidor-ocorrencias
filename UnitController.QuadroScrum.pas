@@ -190,7 +190,7 @@ begin
     Query.Add('FROM BACKLOG_SPRINT LEFT JOIN ORDENS ON BS_CODIGO = ORD_SPRINT WHERE BS_PS = :COD_PROJETO AND BS_ESTADO = :ESTADO');
     Query.Add('ORDER BY BS_CODIGO');
     Query.AddParam('COD_PROJETO', projeto_id);
-    Query.AddParam('ESTADO', 'ENTREGA');
+    Query.AddParam('ESTADO', 'ENTREGUE');
     Query.Open;
     SetLength(ListaItens, indiceItens + 1);
     ListaItens[indiceItens]          := TItem.Create;
