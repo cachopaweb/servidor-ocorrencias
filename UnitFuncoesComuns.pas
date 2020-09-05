@@ -19,6 +19,9 @@ function FormatarData(Value: string): TDateTime;
 //tipos enumerados
 function StrToEnumerado(out ok: Boolean; const s: string; const AString: array of string; const AEnumerados: array of variant): variant;
 function EnumeradoToStr(const t: variant; const AString: array of string; const AEnumerados: array of variant): variant;
+function Arredondar(Valor: Double; Dec: integer): Double;
+function TiraCaracteresInvalidos(Texto: String): String;
+
 
 
 implementation
@@ -81,5 +84,31 @@ begin
       Result := AString[i];
 end;
 
+function Arredondar(Valor: Double; Dec: integer): Double;
+var
+  Formato: string;
+begin
+  Formato := '0.' + StringOfChar('0', Dec);
+  Result  := StrToFloat(FormatFloat(Formato, Valor));
+end;
+
+function TiraCaracteresInvalidos(Texto: String): String;
+var
+  i, j: integer;
+const
+  Invalidos: string = 'áÁàÀãÃâÂéÉèÈêÊíÍìÌîÎóÓòÒõÕôÔúÚùÙûÛçÇªº°';
+  Validos: String = 'aAaAaAaAeEeEeEiIiIiIoOoOoOoOuUuUuUcC...';
+begin
+  for i := 1 to Length(Texto) do
+  begin
+    j := Pos(Texto[i], Invalidos);
+    if j > 0 then
+      Texto[i] := Validos[j];
+  end;
+  Texto  := StringReplace(Texto, '&', '&amp;', [rfReplaceAll]);
+  Texto  := StringReplace(Texto, '<', '&lt;', [rfReplaceAll]);
+  Texto  := StringReplace(Texto, '>', '&gt;', [rfReplaceAll]);
+  Result := Texto;
+end;
 
 end.

@@ -49,10 +49,10 @@ begin
     Backlog := TBacklogProduto.FromJsonString(Req.Body);
     try
       Codigo := GeraCodigo('BACKLOG_P', 'BP_CODIGO');
-      Query.Add('INSERT INTO BACKLOG_P (BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, BP_DATA_BACKLOG, BP_PS, BP_ESTADO, BP_DATA_ENT, BP_FUN, BP_OCORRENCIA)');
-      Query.Add('VALUES (:CODIGO, :DESCRICAO, :NECESSIDADE, :DATA_BACKLOG, :PS, :ESTADO, :DATA_ENT, :FUN, :COD_OCORRENCIA)');
+      Query.Add('INSERT INTO BACKLOG_P (BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, BP_DATA_BACKLOG, BP_PS, BP_ESTADO, BP_DATA_ENT, BP_FUN, BP_OCORRENCIA, BP_TITULO)');
+      Query.Add('VALUES (:CODIGO, :DESCRICAO, :NECESSIDADE, :DATA_BACKLOG, :PS, :ESTADO, :DATA_ENT, :FUN, :COD_OCORRENCIA, :TITULO)');
       Query.AddParam('CODIGO', Codigo);
-      Query.AddParam('DESCRICAO', Backlog.Descricao);
+      Query.AddParam('DESCRICAO', Backlog.Descricao, true);
       Query.AddParam('NECESSIDADE', Backlog.Necessidade);
       Query.AddParam('DATA_BACKLOG', Date);
       Query.AddParam('ESTADO', Backlog.Estado);
@@ -60,6 +60,7 @@ begin
       Query.AddParam('DATA_ENT', Backlog.DataEntrega);
       Query.AddParam('FUN', Backlog.Funcionario);
       Query.AddParam('COD_OCORRENCIA', Backlog.Ocorrencia);
+      Query.AddParam('TITULO', Backlog.Titulo);
       Query.ExecSQL;
       oJson.AddPair('BACKLOG', Codigo.ToString);
       Res.Send<TJSONObject>(oJson).Status(THTTPStatus.Created);

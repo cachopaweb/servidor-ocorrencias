@@ -22,6 +22,7 @@ type
     class procedure Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
     class procedure Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
     class procedure Put(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure PutTextoOrdem(Req: THorseRequest; Res: THorseResponse; Next: TProc);
   end;
 
 implementation
@@ -51,7 +52,7 @@ begin
   Query.Add('ELSE ''ALTA'' END PRIORIDADE, FUN_NOME, (SELECT FUN_NOME FROM FUNCIONARIOS WHERE FUN_CODIGO = ORD_FUN1) QUEM_ABRIU');
   Query.Add('FROM ORDENS, CLIENTES, CONTRATOS, FUNCIONARIOS');
   Query.Add('WHERE ORD_FUN3 = FUN_CODIGO AND ORD_CONT = CONT_CODIGO AND CONT_CLI = CLI_CODIGO AND ORD_ESTADO <> ''ENTREGUE''');
-  Query.Add('ORDER BY ORD_PRAZOE');
+  Query.Add('ORDER BY ORD_NOVO_PRAZOE');
   Query.Open();
   aJson := TJSONArray.Create;
   Dados.DataSet.First;
@@ -190,11 +191,39 @@ begin
   end;
 end;
 
+class procedure TControllerOrdensServicos.PutTextoOrdem(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Fabrica: iFactoryConexao;
+  Conexao: iConexao;
+  Query: iQuery;
+  oJson: TJSONObject;
+  CodigoOrdem: Integer;
+  Ocorrencia: TOcorrencia;
+  Codigo: Integer;
+begin
+  // componentes de conexao
+  Fabrica     := TFactoryConexaoFireDAC.New;
+  Conexao     := Fabrica.Conexao(TConstants.BancoDados);
+  Query       := Fabrica.Query(Conexao);
+  oJson       := TJSONObject.Create;
+  CodigoOrdem := Req.Params.Items['id'].ToInteger;
+  if CodigoOrdem > 0 then
+  begin
+    Ocorrencia := TOcorrencia.FromJsonString(Req.Body);
+    Query.Clear;
+    Query.Add('UPDATE ORDENS SET ORD_OCORRENCIA = :OCORRENCIA WHERE ORD_CODIGO = :CODIGO ');
+    Query.AddParam('OCORRENCIA', Ocorrencia.ocorrencia);
+    Query.AddParam('CODIGO', CodigoOrdem);
+    Query.ExecSQL;
+  end;
+end;
+
 class procedure TControllerOrdensServicos.Registrar(App: THorse);
 begin
   App.Get('/Ordens', Get);
   App.Post('/Ordens', Post);
   App.Put('/Ordens/:id', Put);
+  App.Put('/AtualizaOrdens/:id', PutTextoOrdem);
 end;
 
 end.

@@ -5,7 +5,7 @@
 		"github.com/hashload/horse": {
 			"name": "horse",
 			"version": "1.7.8",
-			"hash": "7f82adf0188b2f66e80e7a3c603558c9",
+			"hash": "49986ed53a5e184f5e78717303fc5467",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -13,7 +13,7 @@
 		"github.com/hashload/horse-cors": {
 			"name": "horse-cors",
 			"version": "1.0.2",
-			"hash": "f1fd91acb4d43c9a778249d447027f16",
+			"hash": "0dd3bb886a0a769cf644dc53b096880f",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -21,7 +21,7 @@
 		"github.com/hashload/jhonson": {
 			"name": "jhonson",
 			"version": "1.0.5",
-			"hash": "34d01183ef1b6af802c7e132adedeae5",
+			"hash": "cc4b853b6610c26d28d22ba96d95efab",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -37,7 +37,7 @@
 		"https://github.com/hashload/handle-exception": {
 			"name": "handle-exception",
 			"version": "0.1.4",
-			"hash": "1152772d75f59dbb562cc7b7711a8ebe",
+			"hash": "648bacf3a15bb53a8c8ae722056a0989",
 			"artifacts": {},
 			"failed": false,
 			"changed": false

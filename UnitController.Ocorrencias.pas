@@ -78,7 +78,7 @@ begin
     Ocorrencia.atendente      := Dados.DataSet.FieldByName('OO_FUN_ATENDENTE').AsInteger;
     Ocorrencia.fun_atendente  := Dados.DataSet.FieldByName('ATENDENTE').AsString;
     Ocorrencia.projeto_scrum  := Dados.DataSet.FieldByName('OO_PROJETO_SCRUM').AsInteger;
-    oJson := TJSONObject.ParseJSONValue(TEncoding.ANSI.GetBytes(Ocorrencia.ToJsonString), 0) as TJSONObject;
+    oJson := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(Ocorrencia.ToJsonString), 0) as TJSONObject;
     aJson.AddElement(oJson);
     Dados.DataSet.Next;
   end;
@@ -95,7 +95,7 @@ var
   Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
-  Cliente: Integer;
+  Contrato: Integer;
 begin
   aJson := TJSONArray.Create;
   // componentes de conexao
@@ -104,7 +104,13 @@ begin
   Query := Fabrica.Query(Conexao);
   Dados := TDataSource.Create(nil);
   Query.DataSource(Dados);
-  Query.Add('SELECT FIRST 50 CLI_NOME, OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_DATA_FINALIZADA, OO_PROJETO_SCRUM, ');
+  if Req.Query.Count > 0 then
+  begin
+    Query.Add('SELECT CLI_NOME, OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_DATA_FINALIZADA, OO_PROJETO_SCRUM, ');
+  end else
+  begin
+    Query.Add('SELECT FIRST 50 CLI_NOME, OO_CODIGO, OO_DATA, OO_FUN, OO_OCORRENCIAS, OO_CONT, OO_DATA_FINALIZADA, OO_PROJETO_SCRUM, ');
+  end;
   Query.Add('OO_SYS_MOD, OO_FINALIZADA, OO_OBS, FUN_NOME, OO_FUN_ATENDENTE,');
   Query.Add('(SELECT FUN_NOME FROM FUNCIONARIOS WHERE OO_FUN_ATENDENTE = FUN_CODIGO) ATENDENTE,');
   Query.Add('CASE WHEN ORD_CODIGO > 0 THEN ''SIM'' ELSE ''NAO'' END ABRIU_OS');
@@ -114,16 +120,16 @@ begin
   Query.Add('WHERE OO_FINALIZADA = ''S''');
   if Req.Query.Count > 0 then
   begin
-    if Req.Query.Items['cliente'] <> '' then
+    if Req.Query.ContainsKey('contrato') then
     begin
-      Cliente := StrToInt(Req.Query.Items['cliente']);
-      Query.Add('AND CLI_CODIGO = :CLIENTE');
-      Query.AddParam('CLIENTE', Cliente);
+      Contrato := StrToInt(Req.Query.Items['contrato']);
+      Query.Add('AND CONT_CODIGO = :CONTRATO');
+      Query.AddParam('CONTRATO', Contrato);
     end else
     begin
       Query.Add('AND OO_DATA_FINALIZADA BETWEEN :DATA1 AND :DATA2');
-      Query.AddParam('DATA1', StrToDate(Req.Query.Items['dataInicial']));
-      Query.AddParam('DATA2', StrToDate(Req.Query.Items['dataFinal']));
+      Query.AddParam('DATA1', FormatarData(Req.Query.Items['dataInicial']));
+      Query.AddParam('DATA2', FormatarData(Req.Query.Items['dataFinal']));
     end;
   end;
   Query.Add('ORDER BY OO_CODIGO DESC');

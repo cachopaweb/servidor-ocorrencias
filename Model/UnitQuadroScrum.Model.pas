@@ -16,6 +16,7 @@ type
     FUser: string;
     Fbb_codigo: integer;
     FOcorrencia: integer;
+    FTitulo: string;
   published
     property Content: string read FContent write FContent;
     property Id: integer read FId write FId;
@@ -23,6 +24,7 @@ type
     property User: string read FUser write FUser;
     property bb_codigo: integer read Fbb_codigo write Fbb_codigo;
     property Ocorrencia: integer read FOcorrencia write FOcorrencia;
+    property Titulo: string read FTitulo write FTitulo;
   end;
 
   TCards = class
@@ -35,6 +37,7 @@ type
     FDataEntrega: string;
     FOcorrencia: integer;
     FOrdem: integer;
+    FTitulo: string;
   published
     property Content: string read FContent write FContent;
     property Id: Integer read FId write FId;
@@ -44,6 +47,7 @@ type
     property DataEntrega: string read FDataEntrega write FDataEntrega;
     property Ocorrencia: integer read FOcorrencia write FOcorrencia;
     property Ordem: integer read FOrdem write FOrdem;
+    property Titulo: string read FTitulo write FTitulo;
   end;
 
   TItem = class

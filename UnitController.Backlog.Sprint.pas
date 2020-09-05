@@ -94,7 +94,7 @@ begin
       Query.AddParam('DATA_SPRINT', Date);
       Query.AddParam('DATA_ENT_PROG', FormatarData(BacklogSprint.DataEntregaProgramacao));
       Query.AddParam('ESTADO', BacklogSprint.Estado);
-      Query.AddParam('DESCRICAO', BacklogSprint.Descricao);
+      Query.AddParam('DESCRICAO', BacklogSprint.Descricao, true);
       Query.AddParam('COD_PROJETO', BacklogSprint.Cod_Projeto_Scrum);
       Query.ExecSQL;
       oJson.AddPair('BACKLOG_SPRINT', Codigo.ToString);
@@ -139,7 +139,14 @@ begin
     CodigoSprint := Req.Params.Items['id'].ToInteger;
     BacklogSprint := TBacklogSprint.FromJsonString(Req.Body);
     try
-      Query.Add('UPDATE BACKLOG_SPRINT SET BS_ESTADO = :ESTADO WHERE (BS_CODIGO = :CODIGO)');
+      if BacklogSprint.Estado = 'ENTREGUE' then
+      begin
+        Query.Add('UPDATE BACKLOG_SPRINT SET BS_ESTADO = :ESTADO, BS_DATA_ENT_REAL = :DATA_ENTREGA WHERE (BS_CODIGO = :CODIGO)');
+        Query.AddParam('DATA_ENTREGA', Date);
+      end else
+      begin
+        Query.Add('UPDATE BACKLOG_SPRINT SET BS_ESTADO = :ESTADO WHERE (BS_CODIGO = :CODIGO)');
+      end;
       Query.AddParam('ESTADO', BacklogSprint.Estado);
       Query.AddParam('CODIGO', CodigoSprint);
       Query.ExecSQL;

@@ -55,7 +55,7 @@ begin
       oJson := TJSONObject.Create;
       oJson.AddPair('codigo', TJSONNumber.Create(Dados.DataSet.FieldByName('FUN_CODIGO').AsInteger));
       oJson.AddPair('login', Dados.DataSet.FieldByName('USU_LOGIN').AsString);
-      oJson.AddPair('categoria', UTF8Encode(Dados.DataSet.FieldByName('FUN_CATEGORIA').AsString));
+      oJson.AddPair('categoria', Dados.DataSet.FieldByName('FUN_CATEGORIA').AsString);
       oJson.AddPair('usu_codigo', TJSONNumber.Create(Dados.DataSet.FieldByName('USU_CODIGO').AsInteger));
       aJson.AddElement(oJson);
       Dados.DataSet.Next;

@@ -55,7 +55,7 @@ begin
       oJson.AddPair('nome', Dados.DataSet.FieldByName('CLI_NOME').AsString);
       oJson.AddPair('celular', Dados.DataSet.FieldByName('CLI_CELULAR').AsString);
       oJson.AddPair('fone', Dados.DataSet.FieldByName('CLI_FONE').AsString);
-      oJson.AddPair('razao', Dados.DataSet.FieldByName('CLI_RAZAO').AsString);
+      oJson.AddPair('razao', UTF8Encode(Dados.DataSet.FieldByName('CLI_RAZAO').AsString));
       oJson.AddPair('email', Dados.DataSet.FieldByName('CLI_EMAIL').AsString);
       oJson.AddPair('cnpj_cpf', Dados.DataSet.FieldByName('CLI_CNPJ_CPF').AsString);
       oJson.AddPair('insc_estadual', Dados.DataSet.FieldByName('CLI_INSC_ESTADUAL').AsString);
@@ -114,7 +114,7 @@ begin
       begin
         oJson := TJSONObject.Create;
         oJson.AddPair('contrato', Dados.DataSet.FieldByName('CONT_CODIGO').AsString);
-        oJson.AddPair('nome', AnsiToUtf8(Dados.DataSet.FieldByName('CLI_NOME').AsString));
+        oJson.AddPair('nome', Dados.DataSet.FieldByName('CLI_NOME').AsString);
         oJson.AddPair('valorpg', Dados.DataSet.FieldByName('VALORPG').AsString);
         oJson.AddPair('duplicata', Dados.DataSet.FieldByName('REC_DUPLICATA').AsString);
         oJson.AddPair('valor', Dados.DataSet.FieldByName('REC_VALOR').AsString);

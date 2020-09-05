@@ -47,8 +47,8 @@ begin
   begin
     oJson := TJSONObject.Create;
     oJson.AddPair('ps_codigo', TJSONNumber.Create(Dados.DataSet.FieldByName('PS_CODIGO').AsInteger));
-    oJson.AddPair('cli_nome', UTF8Encode(Dados.DataSet.FieldByName('CLI_NOME').AsString));
-    oJson.AddPair('ps_nome', Dados.DataSet.FieldByName('PS_NOME').AsString);
+    oJson.AddPair('cli_nome', Dados.DataSet.FieldByName('CLI_NOME').AsString);
+    oJson.AddPair('ps_nome',  Dados.DataSet.FieldByName('PS_NOME').AsString);
     oJson.AddPair('contrato', TJSONNumber.Create(Dados.DataSet.FieldByName('CONT_CODIGO').AsInteger));
     aJson.AddElement(oJson);
     Dados.DataSet.Next;

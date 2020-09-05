@@ -34,12 +34,15 @@ uses
   UnitController.Backlog.Sprint in 'UnitController.Backlog.Sprint.pas',
   UnitBacklog.Sprint.Model in 'Model\UnitBacklog.Sprint.Model.pas',
   UnitOcorrencia.Model in 'Model\UnitOcorrencia.Model.pas',
-  UnitHistoricoPrazoEntrega.Model in 'Model\UnitHistoricoPrazoEntrega.Model.pas';
+  UnitHistoricoPrazoEntrega.Model in 'Model\UnitHistoricoPrazoEntrega.Model.pas',
+  UnitController.Burndown.Projeto in 'UnitController.Burndown.Projeto.pas',
+  UnitBurndown.Projeto.Model in 'Model\UnitBurndown.Projeto.Model.pas';
 
 var
   App: THorse;
 
 begin
+  //ReportMemoryLeaksOnShutdown := true;
   App := THorse.Create(9000);
   App.Use(Jhonson);
   App.Use(HandleException);
@@ -56,6 +59,7 @@ begin
   TControllerBacklogProduto.Registrar(App);
   TControllerQuadroScrum.Registrar(App);
   TControllerBacklogSprint.Registrar(App);
+  TControllerBurndownProjeto.Registrar(App);
   //inicia o servidor
   App.Start;
 end.

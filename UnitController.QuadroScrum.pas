@@ -64,7 +64,7 @@ begin
     Query   := Fabrica.Query(Conexao);
     Dados   := TDataSource.Create(nil);
     Query.DataSource(Dados);
-    Query.Add('SELECT BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, FUN_AVATAR, BP_OCORRENCIA ');
+    Query.Add('SELECT BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, FUN_AVATAR, BP_OCORRENCIA, BP_TITULO ');
     Query.Add('FROM BACKLOG_P JOIN FUNCIONARIOS ON BP_FUN = FUN_CODIGO ');
     Query.Add('WHERE BP_PS = :COD_PROJETO AND BP_CODIGO NOT IN (SELECT BB_BP FROM BS_BP WHERE BB_BP = BP_CODIGO) ORDER BY BP_CODIGO');
     Query.AddParam('COD_PROJETO', projeto_id);
@@ -82,9 +82,10 @@ begin
       ListaCards[indiceCards]            := TCards.Create;
       ListaCards[indiceCards].Labels     := [TPrioridade(Dados.DataSet.FieldByName('BP_NECESSIDADE').AsInteger).toColorsLabel];
       ListaCards[indiceCards].Id         := Dados.DataSet.FieldByName('BP_CODIGO').AsInteger;
-      ListaCards[indiceCards].Content    := UTF8Encode(Dados.DataSet.FieldByName('BP_DESCRICAO').AsString);
+      ListaCards[indiceCards].Content    := Dados.DataSet.FieldByName('BP_DESCRICAO').AsString;
       ListaCards[indiceCards].User       := Dados.DataSet.FieldByName('FUN_AVATAR').AsString;
       ListaCards[indiceCards].Ocorrencia := Dados.DataSet.FieldByName('BP_OCORRENCIA').AsInteger;
+      ListaCards[indiceCards].Titulo     := Dados.DataSet.FieldByName('BP_TITULO').AsString;
       ListaItens[indiceItens].Cards      := ListaCards;
       Inc(indiceCards);
       Dados.DataSet.Next;
@@ -217,7 +218,7 @@ begin
     QuadroScrum.Items := ListaItens;
     Res.Status(200);
     JsonString := QuadroScrum.ToJsonString;
-    oJson      := TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(JsonString), 0) as TJSONObject;
+    oJson      := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(JsonString), 0) as TJSONObject;
     aJson      := oJson.GetValue('items') as TJSONArray;
     Res.Send<TJSONArray>(aJson);
   finally
@@ -253,7 +254,7 @@ begin
   Dados          := TDataSource.Create(nil);
   Query.DataSource(Dados);
   Query.Clear;
-  Query.Add('SELECT BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, FUN_AVATAR, BB_CODIGO, BP_OCORRENCIA');
+  Query.Add('SELECT BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, FUN_AVATAR, BB_CODIGO, BP_OCORRENCIA, BP_TITULO');
   Query.Add('FROM BS_BP LEFT JOIN BACKLOG_P ON BB_BP = BP_CODIGO');
   Query.Add('LEFT JOIN FUNCIONARIOS ON BP_FUN = FUN_CODIGO');
   Query.Add('WHERE BB_BS = :COD_SPRINT');
@@ -271,6 +272,7 @@ begin
     Result[indiceBacklogs].User       := Dados.DataSet.FieldByName('FUN_AVATAR').AsString;
     Result[indiceBacklogs].bb_codigo  := Dados.DataSet.FieldByName('BB_CODIGO').AsInteger;
     Result[indiceBacklogs].Ocorrencia := Dados.DataSet.FieldByName('BP_OCORRENCIA').AsInteger;
+    Result[indiceBacklogs].Titulo     := Dados.DataSet.FieldByName('BP_TITULO').AsString;
     Inc(indiceBacklogs);
     Dados.DataSet.Next;
   end;
