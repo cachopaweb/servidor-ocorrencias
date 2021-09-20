@@ -27,9 +27,14 @@ type
     Fos_modulo: integer;
     FcodSprint: integer;
     Fnovo_prazoe: string;
+    Fcodigo: integer;
+    Flaudo: string;
+    Ftipo_entrega: string;
+    Ffuncionario: integer;
   public
     function ToJsonString: string;
     class function FromJsonString(Value: string): TModelOrdens;
+    property codigo: integer read Fcodigo write Fcodigo;
     property fun_abertura: integer read Ffun_abertura write Ffun_abertura;
     property contrato: integer read Fcontrato write Fcontrato;
     property ocorrencia: string read Focorrencia write Focorrencia;
@@ -50,6 +55,9 @@ type
     property os_modulo: integer read Fos_modulo write Fos_modulo;
     property codSprint: integer read FcodSprint write FcodSprint;
     property novo_prazoe: string read Fnovo_prazoe write Fnovo_prazoe;
+    property laudo: string read Flaudo write Flaudo;
+    property tipo_entrega: string read Ftipo_entrega write Ftipo_entrega;
+    property funcionario: integer read Ffuncionario write Ffuncionario;
   end;
 
 implementation

@@ -1,11 +1,27 @@
 {
 	"hash": "280113b58ca04bd528f3ac6771539e78",
-	"updated": "2020-07-27T13:59:51.213001-04:00",
+	"updated": "2020-09-29T14:55:45.9224684-04:00",
 	"installedModules": {
+		"github.com/cachopaweb/factory-connections": {
+			"name": "factory-connections",
+			"version": "1.0.1",
+			"hash": "afe93df6a69037b7acfa3aef6464146c",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"github.com/giorgiobazzo/horse-upload": {
+			"name": "horse-upload",
+			"version": "1.0.6",
+			"hash": "d5cede3d51bb6f93910a783c9305f71c",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
 		"github.com/hashload/horse": {
 			"name": "horse",
-			"version": "1.7.8",
-			"hash": "49986ed53a5e184f5e78717303fc5467",
+			"version": "2.0.8",
+			"hash": "d999f4fb2b0ede1e25627323d88062a7",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -13,23 +29,23 @@
 		"github.com/hashload/horse-cors": {
 			"name": "horse-cors",
 			"version": "1.0.2",
-			"hash": "0dd3bb886a0a769cf644dc53b096880f",
+			"hash": "cbbf3b67177d2d0364d603b6f07603a6",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"github.com/hashload/horse-octet-stream": {
+			"name": "horse-octet-stream",
+			"version": "1.9.3",
+			"hash": "146baf4e63da6dc2cbf9cba63a824e93",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
 		},
 		"github.com/hashload/jhonson": {
 			"name": "jhonson",
-			"version": "1.0.5",
-			"hash": "cc4b853b6610c26d28d22ba96d95efab",
-			"artifacts": {},
-			"failed": false,
-			"changed": false
-		},
-		"https://github.com/cachopaweb/factory-conection": {
-			"name": "factory-conection",
-			"version": "master",
-			"hash": "e43b8d0d8715c704422f26eb6f770c1c",
+			"version": "1.1.1",
+			"hash": "974a629e5bdc03dd04a1fb3bfabf6a7c",
 			"artifacts": {},
 			"failed": false,
 			"changed": false
@@ -37,7 +53,15 @@
 		"https://github.com/hashload/handle-exception": {
 			"name": "handle-exception",
 			"version": "0.1.4",
-			"hash": "648bacf3a15bb53a8c8ae722056a0989",
+			"hash": "7b8b9487f1f7ed9ae9e1429f4b291295",
+			"artifacts": {},
+			"failed": false,
+			"changed": false
+		},
+		"https://github.com/viniciussanchez/dataset-serialize": {
+			"name": "dataset-serialize",
+			"version": "v2.3.0",
+			"hash": "fab44ee3849a7756b82781bda052af4c",
 			"artifacts": {},
 			"failed": false,
 			"changed": false

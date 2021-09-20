@@ -8,10 +8,7 @@ uses
   System.Json,
   Horse.Commons,
   DB,
-  UnitConexao.Model.Interfaces,
-  UnitConexao.FireDAC.Model,
-  UnitQuery.FireDAC.Model,
-  UnitFactory.Conexao.FireDAC,
+  UnitConnection.Model.Interfaces,
   UnitFuncoesComuns, UnitConstantes;
 
 
@@ -25,24 +22,17 @@ implementation
 
 { TControllerBacklogProduto }
 
-uses UnitBacklog.Produto.Model;
+uses UnitBacklog.Produto.Model, UnitDatabase;
 
 class procedure TControllerBacklogProduto.Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
   oJson: TJSONObject;
   Backlog: TBacklogProduto;
   Codigo: integer;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
   Query: iQuery;
-  Dados: TDataSource;
 begin
   // componentes de conexao
-  Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  Query.DataSource(Dados);
+  Query := TDatabase.Query();
   oJson := TJSONObject.Create;
   if Req.Body <> '' then
   begin

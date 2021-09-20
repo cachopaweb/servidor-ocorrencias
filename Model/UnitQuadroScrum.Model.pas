@@ -27,6 +27,15 @@ type
     property Titulo: string read FTitulo write FTitulo;
   end;
 
+  TImagem = class
+  private
+    Fnome: string;
+    Fbase64: string;
+  public
+    property nome: string read Fnome write Fnome;
+    property base64: string read Fbase64 write Fbase64;
+  end;
+
   TCards = class
   private
     FContent: string;
@@ -38,6 +47,7 @@ type
     FOcorrencia: integer;
     FOrdem: integer;
     FTitulo: string;
+    FData: string;
   published
     property Content: string read FContent write FContent;
     property Id: Integer read FId write FId;
@@ -48,6 +58,7 @@ type
     property Ocorrencia: integer read FOcorrencia write FOcorrencia;
     property Ordem: integer read FOrdem write FOrdem;
     property Titulo: string read FTitulo write FTitulo;
+    property Data: string read FData write FData;
   end;
 
   TItem = class

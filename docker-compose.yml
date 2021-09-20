@@ -1,8 +1,8 @@
-version: '2.1'
+version: '3.6'
 
 services:
-  codigo:
-    image: codigo
-    build: .
+  servidor_os:
+    image: cachopaweb/servidor
+    privileged: true  
     ports:
-      - 64211:64211
+      - 9000:9000

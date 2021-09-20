@@ -8,12 +8,9 @@ uses
   SysUtils,
   System.Json,
   DB,
-  UnitConexao.Model.Interfaces,
+  UnitConnection.Model.Interfaces,
   UnitOcorrencia.Model,
   UnitQuadroScrum.Model,
-  UnitConexao.FireDAC.Model,
-  UnitQuery.FireDAC.Model,
-  UnitFactory.Conexao.FireDAC,
   UnitFuncoesComuns, UnitConstantes;
 
 type
@@ -35,18 +32,18 @@ implementation
 
 { TControllerQuadroScrum }
 
+uses UnitDatabase;
+
 class procedure TControllerQuadroScrum.Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
   oJson        : TJSONObject;
   aJson        : TJSONArray;
-  Fabrica      : iFactoryConexao;
-  Conexao      : iConexao;
   Query        : iQuery;
-  Dados        : TDataSource;
   QuadroScrum  : TQuadroScrum;
   ListaItens   : TArray<TItem>;
   ListaCards   : TArray<TCards>;
   ListaBacklogs: TArray<TBacklog>;
+  ListaImagens : TArray<TImagem>;
   indiceItens  : integer;
   indiceCards  : integer;
   JsonString   : string;
@@ -59,11 +56,7 @@ begin
     if projeto_id = '' then
       raise Exception.Create('Codigo do projeto Scrum obrigatório');
     // componentes de conexao
-    Fabrica := TFactoryConexaoFireDAC.New;
-    Conexao := Fabrica.Conexao(TConstants.BancoDados);
-    Query   := Fabrica.Query(Conexao);
-    Dados   := TDataSource.Create(nil);
-    Query.DataSource(Dados);
+    Query   := TDatabase.Query();
     Query.Add('SELECT BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, FUN_AVATAR, BP_OCORRENCIA, BP_TITULO ');
     Query.Add('FROM BACKLOG_P JOIN FUNCIONARIOS ON BP_FUN = FUN_CODIGO ');
     Query.Add('WHERE BP_PS = :COD_PROJETO AND BP_CODIGO NOT IN (SELECT BB_BP FROM BS_BP WHERE BB_BP = BP_CODIGO) ORDER BY BP_CODIGO');
@@ -75,25 +68,25 @@ begin
     ListaItens[indiceItens].Title         := 'Backlog';
     ListaItens[indiceItens].CreateBacklog := True;
     indiceCards                           := 0;
-    Dados.DataSet.First;
-    while not Dados.DataSet.Eof do
+    Query.DataSet.First;
+    while not Query.DataSet.Eof do
     begin
       SetLength(ListaCards, indiceCards + 1);
       ListaCards[indiceCards]            := TCards.Create;
-      ListaCards[indiceCards].Labels     := [TPrioridade(Dados.DataSet.FieldByName('BP_NECESSIDADE').AsInteger).toColorsLabel];
-      ListaCards[indiceCards].Id         := Dados.DataSet.FieldByName('BP_CODIGO').AsInteger;
-      ListaCards[indiceCards].Content    := Dados.DataSet.FieldByName('BP_DESCRICAO').AsString;
-      ListaCards[indiceCards].User       := Dados.DataSet.FieldByName('FUN_AVATAR').AsString;
-      ListaCards[indiceCards].Ocorrencia := Dados.DataSet.FieldByName('BP_OCORRENCIA').AsInteger;
-      ListaCards[indiceCards].Titulo     := Dados.DataSet.FieldByName('BP_TITULO').AsString;
+      ListaCards[indiceCards].Labels     := [TPrioridade(Query.DataSet.FieldByName('BP_NECESSIDADE').AsInteger).toColorsLabel];
+      ListaCards[indiceCards].Id         := Query.DataSet.FieldByName('BP_CODIGO').AsInteger;
+      ListaCards[indiceCards].Content    := Query.DataSet.FieldByName('BP_DESCRICAO').AsString;
+      ListaCards[indiceCards].User       := Query.DataSet.FieldByName('FUN_AVATAR').AsString;
+      ListaCards[indiceCards].Ocorrencia := Query.DataSet.FieldByName('BP_OCORRENCIA').AsInteger;
+      ListaCards[indiceCards].Titulo     := Query.DataSet.FieldByName('BP_TITULO').AsString;
       ListaItens[indiceItens].Cards      := ListaCards;
       Inc(indiceCards);
-      Dados.DataSet.Next;
+      Query.DataSet.Next;
     end;
     Inc(indiceItens);
     // Sprint a fazer
     Query.Clear;
-    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_ENT_PROG, ORD_CODIGO');
+    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_SPRINT, BS_DATA_ENT_PROG, ORD_CODIGO');
     Query.Add('FROM BACKLOG_SPRINT LEFT JOIN ORDENS ON BS_CODIGO = ORD_SPRINT WHERE BS_PS = :COD_PROJETO AND BS_ESTADO = :ESTADO');
     Query.Add('ORDER BY BS_CODIGO');
     Query.AddParam('COD_PROJETO', projeto_id);
@@ -105,27 +98,29 @@ begin
     ListaItens[indiceItens].CreateSprint := True;
     ListaItens[indiceItens].EhSprint     := True;
     indiceCards                          := 0;
-    Dados.DataSet.First;
-    while not Dados.DataSet.Eof do
+    Query.DataSet.First;
+    while not Query.DataSet.Eof do
     begin
       ListaBacklogs := [];
+      ListaImagens  := [];
       SetLength(ListaCards, indiceCards + 1);
       ListaCards[indiceCards]             := TCards.Create;
       ListaCards[indiceCards].Labels      := [];
-      ListaCards[indiceCards].Id          := Dados.DataSet.FieldByName('BS_CODIGO').AsInteger;
-      ListaCards[indiceCards].Content     := Dados.DataSet.FieldByName('BS_DESCRICAO').AsString;
-      ListaCards[indiceCards].DataEntrega := Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
-      ListaCards[indiceCards].Ordem       := Dados.DataSet.FieldByName('ORD_CODIGO').AsInteger;
-      ListaBacklogs                       := MontaBacklogs(Dados.DataSet.FieldByName('BS_CODIGO').AsInteger);
+      ListaCards[indiceCards].Id          := Query.DataSet.FieldByName('BS_CODIGO').AsInteger;
+      ListaCards[indiceCards].Content     := Query.DataSet.FieldByName('BS_DESCRICAO').AsString;
+      ListaCards[indiceCards].DataEntrega := Query.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
+      ListaCards[indiceCards].Data        := Query.DataSet.FieldByName('BS_DATA_SPRINT').AsString;
+      ListaCards[indiceCards].Ordem       := Query.DataSet.FieldByName('ORD_CODIGO').AsInteger;
+      ListaBacklogs                       := MontaBacklogs(Query.DataSet.FieldByName('BS_CODIGO').AsInteger);
       ListaCards[indiceCards].Backlogs    := ListaBacklogs;
       ListaItens[indiceItens].Cards       := ListaCards;
       Inc(indiceCards);
-      Dados.DataSet.Next;
+      Query.DataSet.Next;
     end;
     Inc(indiceItens);
     // Sprint em andamento
     Query.Clear;
-    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_ENT_PROG, ORD_CODIGO');
+    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_SPRINT, BS_DATA_ENT_PROG, ORD_CODIGO');
     Query.Add('FROM BACKLOG_SPRINT LEFT JOIN ORDENS ON BS_CODIGO = ORD_SPRINT WHERE BS_PS = :COD_PROJETO AND BS_ESTADO = :ESTADO');
     Query.Add('ORDER BY BS_CODIGO');
     Query.AddParam('COD_PROJETO', projeto_id);
@@ -136,27 +131,29 @@ begin
     ListaItens[indiceItens].Title    := 'Sprint Em Andamento';
     ListaItens[indiceItens].EhSprint := True;
     indiceCards                      := 0;
-    Dados.DataSet.First;
-    while not Dados.DataSet.Eof do
+    Query.DataSet.First;
+    while not Query.DataSet.Eof do
     begin
       ListaBacklogs := [];
+      ListaImagens  := [];
       SetLength(ListaCards, indiceCards + 1);
       ListaCards[indiceCards]             := TCards.Create;
       ListaCards[indiceCards].Labels      := [];
-      ListaCards[indiceCards].Id          := Dados.DataSet.FieldByName('BS_CODIGO').AsInteger;
-      ListaCards[indiceCards].Content     := Dados.DataSet.FieldByName('BS_DESCRICAO').AsString;
-      ListaCards[indiceCards].DataEntrega := Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
-      ListaCards[indiceCards].Ordem       := Dados.DataSet.FieldByName('ORD_CODIGO').AsInteger;
-      ListaBacklogs                       := MontaBacklogs(Dados.DataSet.FieldByName('BS_CODIGO').AsInteger);
+      ListaCards[indiceCards].Id          := Query.DataSet.FieldByName('BS_CODIGO').AsInteger;
+      ListaCards[indiceCards].Content     := Query.DataSet.FieldByName('BS_DESCRICAO').AsString;
+      ListaCards[indiceCards].DataEntrega := Query.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
+      ListaCards[indiceCards].Data        := Query.DataSet.FieldByName('BS_DATA_SPRINT').AsString;
+      ListaCards[indiceCards].Ordem       := Query.DataSet.FieldByName('ORD_CODIGO').AsInteger;
+      ListaBacklogs                       := MontaBacklogs(Query.DataSet.FieldByName('BS_CODIGO').AsInteger);
       ListaCards[indiceCards].Backlogs    := ListaBacklogs;
       ListaItens[indiceItens].Cards       := ListaCards;
       Inc(indiceCards);
-      Dados.DataSet.Next;
+      Query.DataSet.Next;
     end;
     Inc(indiceItens);
     // Sprint revisão/aprovação
     Query.Clear;
-    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_ENT_PROG, ORD_CODIGO');
+    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_SPRINT, BS_DATA_ENT_PROG, ORD_CODIGO');
     Query.Add('FROM BACKLOG_SPRINT LEFT JOIN ORDENS ON BS_CODIGO = ORD_SPRINT WHERE BS_PS = :COD_PROJETO AND BS_ESTADO = :ESTADO');
     Query.Add('ORDER BY BS_CODIGO');
     Query.AddParam('COD_PROJETO', projeto_id);
@@ -167,27 +164,29 @@ begin
     ListaItens[indiceItens].Title    := 'Sprint Revisão/Aprovação';
     ListaItens[indiceItens].EhSprint := True;
     indiceCards                      := 0;
-    Dados.DataSet.First;
-    while not Dados.DataSet.Eof do
+    Query.DataSet.First;
+    while not Query.DataSet.Eof do
     begin
       ListaBacklogs := [];
+      ListaImagens  := [];
       SetLength(ListaCards, indiceCards + 1);
       ListaCards[indiceCards]             := TCards.Create;
       ListaCards[indiceCards].Labels      := [];
-      ListaCards[indiceCards].Id          := Dados.DataSet.FieldByName('BS_CODIGO').AsInteger;
-      ListaCards[indiceCards].Content     := Dados.DataSet.FieldByName('BS_DESCRICAO').AsString;
-      ListaCards[indiceCards].DataEntrega := Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
-      ListaCards[indiceCards].Ordem       := Dados.DataSet.FieldByName('ORD_CODIGO').AsInteger;
-      ListaBacklogs                       := MontaBacklogs(Dados.DataSet.FieldByName('BS_CODIGO').AsInteger);
+      ListaCards[indiceCards].Id          := Query.DataSet.FieldByName('BS_CODIGO').AsInteger;
+      ListaCards[indiceCards].Content     := Query.DataSet.FieldByName('BS_DESCRICAO').AsString;
+      ListaCards[indiceCards].DataEntrega := Query.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
+      ListaCards[indiceCards].Data        := Query.DataSet.FieldByName('BS_DATA_SPRINT').AsString;
+      ListaCards[indiceCards].Ordem       := Query.DataSet.FieldByName('ORD_CODIGO').AsInteger;
+      ListaBacklogs                       := MontaBacklogs(Query.DataSet.FieldByName('BS_CODIGO').AsInteger);
       ListaCards[indiceCards].Backlogs    := ListaBacklogs;
       ListaItens[indiceItens].Cards       := ListaCards;
       Inc(indiceCards);
-      Dados.DataSet.Next;
+      Query.DataSet.Next;
     end;
     Inc(indiceItens);
     // Sprint Entregue
     Query.Clear;
-    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_ENT_PROG, ORD_CODIGO');
+    Query.Add('SELECT BS_CODIGO, BS_DESCRICAO, BS_DATA_SPRINT, BS_DATA_ENT_PROG, ORD_CODIGO');
     Query.Add('FROM BACKLOG_SPRINT LEFT JOIN ORDENS ON BS_CODIGO = ORD_SPRINT WHERE BS_PS = :COD_PROJETO AND BS_ESTADO = :ESTADO');
     Query.Add('ORDER BY BS_CODIGO');
     Query.AddParam('COD_PROJETO', projeto_id);
@@ -198,22 +197,24 @@ begin
     ListaItens[indiceItens].Title    := 'Sprint Entregue';
     ListaItens[indiceItens].EhSprint := True;
     indiceCards                      := 0;
-    Dados.DataSet.First;
-    while not Dados.DataSet.Eof do
+    Query.DataSet.First;
+    while not Query.DataSet.Eof do
     begin
       ListaBacklogs := [];
+      ListaImagens  := [];
       SetLength(ListaCards, indiceCards + 1);
       ListaCards[indiceCards]             := TCards.Create;
       ListaCards[indiceCards].Labels      := [];
-      ListaCards[indiceCards].Id          := Dados.DataSet.FieldByName('BS_CODIGO').AsInteger;
-      ListaCards[indiceCards].Content     := Dados.DataSet.FieldByName('BS_DESCRICAO').AsString;
-      ListaCards[indiceCards].DataEntrega := Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
-      ListaCards[indiceCards].Ordem       := Dados.DataSet.FieldByName('ORD_CODIGO').AsInteger;
-      ListaBacklogs                       := MontaBacklogs(Dados.DataSet.FieldByName('BS_CODIGO').AsInteger);
+      ListaCards[indiceCards].Id          := Query.DataSet.FieldByName('BS_CODIGO').AsInteger;
+      ListaCards[indiceCards].Content     := Query.DataSet.FieldByName('BS_DESCRICAO').AsString;
+      ListaCards[indiceCards].DataEntrega := Query.DataSet.FieldByName('BS_DATA_ENT_PROG').AsString;
+      ListaCards[indiceCards].Data        := Query.DataSet.FieldByName('BS_DATA_SPRINT').AsString;
+      ListaCards[indiceCards].Ordem       := Query.DataSet.FieldByName('ORD_CODIGO').AsInteger;
+      ListaBacklogs                       := MontaBacklogs(Query.DataSet.FieldByName('BS_CODIGO').AsInteger);
       ListaCards[indiceCards].Backlogs    := ListaBacklogs;
       ListaItens[indiceItens].Cards       := ListaCards;
       Inc(indiceCards);
-      Dados.DataSet.Next;
+      Query.DataSet.Next;
     end;
     QuadroScrum.Items := ListaItens;
     Res.Status(200);
@@ -241,18 +242,11 @@ end;
 class function TControllerQuadroScrum.MontaBacklogs(CodSprint: integer): TArray<TBacklog>;
 var
   indiceBacklogs: integer;
-  Fabrica       : iFactoryConexao;
-  Conexao       : iConexao;
   Query         : iQuery;
-  Dados         : TDataSource;
 begin
   /// //
   indiceBacklogs := 0;
-  Fabrica        := TFactoryConexaoFireDAC.New;
-  Conexao        := Fabrica.Conexao(TConstants.BancoDados);
-  Query          := Fabrica.Query(Conexao);
-  Dados          := TDataSource.Create(nil);
-  Query.DataSource(Dados);
+  Query          := TDatabase.Query();
   Query.Clear;
   Query.Add('SELECT BP_CODIGO, BP_DESCRICAO, BP_NECESSIDADE, FUN_AVATAR, BB_CODIGO, BP_OCORRENCIA, BP_TITULO');
   Query.Add('FROM BS_BP LEFT JOIN BACKLOG_P ON BB_BP = BP_CODIGO');
@@ -261,20 +255,20 @@ begin
   Query.Add('ORDER BY BP_CODIGO');
   Query.AddParam('COD_SPRINT', CodSprint);
   Query.Open;
-  Dados.DataSet.First;
-  while not Dados.DataSet.Eof do
+  Query.DataSet.First;
+  while not Query.DataSet.Eof do
   begin
     SetLength(Result, indiceBacklogs + 1);
     Result[indiceBacklogs]            := TBacklog.Create;
-    Result[indiceBacklogs].Labels     := [TPrioridade(Dados.DataSet.FieldByName('BP_NECESSIDADE').AsInteger).toColorsLabel];
-    Result[indiceBacklogs].Id         := Dados.DataSet.FieldByName('BP_CODIGO').AsInteger;
-    Result[indiceBacklogs].Content    := Dados.DataSet.FieldByName('BP_DESCRICAO').AsString;
-    Result[indiceBacklogs].User       := Dados.DataSet.FieldByName('FUN_AVATAR').AsString;
-    Result[indiceBacklogs].bb_codigo  := Dados.DataSet.FieldByName('BB_CODIGO').AsInteger;
-    Result[indiceBacklogs].Ocorrencia := Dados.DataSet.FieldByName('BP_OCORRENCIA').AsInteger;
-    Result[indiceBacklogs].Titulo     := Dados.DataSet.FieldByName('BP_TITULO').AsString;
+    Result[indiceBacklogs].Labels     := [TPrioridade(Query.DataSet.FieldByName('BP_NECESSIDADE').AsInteger).toColorsLabel];
+    Result[indiceBacklogs].Id         := Query.DataSet.FieldByName('BP_CODIGO').AsInteger;
+    Result[indiceBacklogs].Content    := Query.DataSet.FieldByName('BP_DESCRICAO').AsString;
+    Result[indiceBacklogs].User       := Query.DataSet.FieldByName('FUN_AVATAR').AsString;
+    Result[indiceBacklogs].bb_codigo  := Query.DataSet.FieldByName('BB_CODIGO').AsInteger;
+    Result[indiceBacklogs].Ocorrencia := Query.DataSet.FieldByName('BP_OCORRENCIA').AsInteger;
+    Result[indiceBacklogs].Titulo     := Query.DataSet.FieldByName('BP_TITULO').AsString;
     Inc(indiceBacklogs);
-    Dados.DataSet.Next;
+    Query.DataSet.Next;
   end;
 end;
 

@@ -7,11 +7,8 @@ uses
   SysUtils,
   System.Json,
   DB,
-  UnitConexao.Model.Interfaces,
+  UnitConnection.Model.Interfaces,
   UnitOcorrencia.Model,
-  UnitConexao.FireDAC.Model,
-  UnitQuery.FireDAC.Model,
-  UnitFactory.Conexao.FireDAC,
   UnitFuncoesComuns, UnitConstantes;
 
 
@@ -25,7 +22,7 @@ type
 implementation
 
 uses
-  UnitLogin.Model;
+  UnitLogin.Model, UnitDatabase;
 
 { TControllerLogin }
 
@@ -33,22 +30,18 @@ class procedure TControllerLogin.Get(Req: THorseRequest; Res: THorseResponse; Ne
 var
   oJson: TJSONObject;
   aJson: TJSONArray;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
 begin
   aJson := TJSONArray.Create;
   try
     // componentes de conexao
-    Fabrica := TFactoryConexaoFireDAC.New;
-    Conexao := Fabrica.Conexao(TConstants.BancoDados);
-    Query := Fabrica.Query(Conexao);
+    Query := TDatabase.Query;
     Dados := TDataSource.Create(nil);
-    Query.DataSource(Dados);
     Query.Add('SELECT FUN_CODIGO, USU_LOGIN, FUN_CATEGORIA, USU_CODIGO FROM USUARIOS JOIN FUNCIONARIOS ON USU_FUN = FUN_CODIGO AND FUN_ESTADO = ''ATIVO''');
     Query.Add('ORDER BY USU_LOGIN');
     Query.Open;
+    Dados.DataSet := Query.DataSet;
     Dados.DataSet.First;
     while not Dados.DataSet.Eof do
     begin
@@ -76,8 +69,6 @@ var
   Login: TLogin;
   ListaUsuarios: TArray<TUsuarios>;
   Usuario: TUsuarios;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
 begin
@@ -86,12 +77,10 @@ begin
   begin
     Usuario := TUsuarios.FromJsonString(Req.Body);
     // componentes de conexao
-    Fabrica := TFactoryConexaoFireDAC.New;
-    Conexao := Fabrica.Conexao(TConstants.BancoDados);
-    Query := Fabrica.Query(Conexao);
+    Query := TDatabase.Query;
     Dados := TDataSource.Create(nil);
-    Query.DataSource(Dados);
     Query.Open(Format('SELECT USU_CODIGO FROM USUARIOS WHERE USU_LOGIN = ''%s'' AND USU_SENHA = ''%s''', [Usuario.login.ToUpper,  EnDecryptString(Usuario.senha, 236)]));
+    Dados.DataSet := Query.DataSet;
     if not Dados.DataSet.IsEmpty then
     begin
       Res.Status(200);

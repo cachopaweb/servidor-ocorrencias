@@ -7,11 +7,8 @@ uses
   SysUtils,
   System.Json,
   DB,
-  UnitConexao.Model.Interfaces,
+  UnitConnection.Model.Interfaces,
   UnitOcorrencia.Model,
-  UnitConexao.FireDAC.Model,
-  UnitQuery.FireDAC.Model,
-  UnitFactory.Conexao.FireDAC,
   UnitFuncoesComuns, UnitConstantes;
 
 
@@ -25,37 +22,32 @@ implementation
 
 { TControllerMVA }
 
+uses UnitDatabase;
+
 class procedure TControllerMVA.Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
   oJson: TJSONObject;
   aJson: TJSONArray;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
   Query: iQuery;
-  Dados: TDataSource;
 begin
   aJson := TJSONArray.Create;
   // componentes de conexao
-  Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  Query.DataSource(Dados);
+  Query := TDatabase.Query();
   Query.Add('SELECT MVA_CODIGO, MG_DESCRICAO, MVA_DESCRICAO, MVA_NCM, MVA_INTERNA, MVA_CEST');
   Query.Add('FROM MARGEM_VALOR_AGREGADO INNER JOIN MVA_GRUPOS ON MG_CODIGO = MVA_GRU');
   Query.Open;
-  Dados.DataSet.First;
-  while not Dados.DataSet.Eof do
+  Query.DataSet.First;
+  while not Query.DataSet.Eof do
   begin
     oJson := TJSONObject.Create;
-    oJson.AddPair('codigo', Dados.DataSet.FieldByName('MVA_CODIGO').AsString);
-    oJson.AddPair('grupo', Dados.DataSet.FieldByName('MG_DESCRICAO').AsString);
-    oJson.AddPair('descricao', Dados.DataSet.FieldByName('MVA_DESCRICAO').AsString);
-    oJson.AddPair('ncm', Dados.DataSet.FieldByName('MVA_NCM').AsString);
-    oJson.AddPair('mva_interna', Dados.DataSet.FieldByName('MVA_INTERNA').AsString);
-    oJson.AddPair('cest', Dados.DataSet.FieldByName('MVA_CEST').AsString);
+    oJson.AddPair('codigo', Query.DataSet.FieldByName('MVA_CODIGO').AsString);
+    oJson.AddPair('grupo', Query.DataSet.FieldByName('MG_DESCRICAO').AsString);
+    oJson.AddPair('descricao', Query.DataSet.FieldByName('MVA_DESCRICAO').AsString);
+    oJson.AddPair('ncm', Query.DataSet.FieldByName('MVA_NCM').AsString);
+    oJson.AddPair('mva_interna', Query.DataSet.FieldByName('MVA_INTERNA').AsString);
+    oJson.AddPair('cest', Query.DataSet.FieldByName('MVA_CEST').AsString);
     aJson.AddElement(oJson);
-    Dados.DataSet.Next;
+    Query.DataSet.Next;
   end;
   Res.Status(200);
   Res.Send<TJSONArray>(aJson);

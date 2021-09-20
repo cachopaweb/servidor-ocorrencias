@@ -10,6 +10,8 @@ uses
   Horse.CORS,
   Horse.Jhonson,
   Horse.HandleException,
+  Horse.Upload,
+  Horse.OctetStream,
   Classes,
   SysUtils,
   System.Json,
@@ -19,7 +21,7 @@ uses
   UnitContrassenha.Model in 'Model\UnitContrassenha.Model.pas',
   UnitOrdens.Model in 'Model\UnitOrdens.Model.pas',
   UnitController.Ocorrencias in 'UnitController.Ocorrencias.pas',
-  UnitFuncoesComuns in 'UnitFuncoesComuns.pas',
+  UnitFuncoesComuns in 'UnitFuncoesComuns.pas' {/  UnitController.Login in 'UnitController.Login.pas',},
   UnitController.Login in 'UnitController.Login.pas',
   UnitController.Scrum in 'UnitController.Scrum.pas',
   UnitController.Contrassenhas in 'UnitController.Contrassenhas.pas',
@@ -36,17 +38,26 @@ uses
   UnitOcorrencia.Model in 'Model\UnitOcorrencia.Model.pas',
   UnitHistoricoPrazoEntrega.Model in 'Model\UnitHistoricoPrazoEntrega.Model.pas',
   UnitController.Burndown.Projeto in 'UnitController.Burndown.Projeto.pas',
-  UnitBurndown.Projeto.Model in 'Model\UnitBurndown.Projeto.Model.pas';
+  UnitBurndown.Projeto.Model in 'Model\UnitBurndown.Projeto.Model.pas',
+  UnitProjetoScrum.Model in 'Model\UnitProjetoScrum.Model.pas',
+  UnitAtualizaSprint.Model in 'Model\UnitAtualizaSprint.Model.pas',
+  UnitArquivos_Sprint.Model in 'Model\UnitArquivos_Sprint.Model.pas',
+  UnitRetrospectiva.Model in 'Model\UnitRetrospectiva.Model.pas',
+  UnitController.QuadroKANBAN in 'UnitController.QuadroKANBAN.pas',
+  UnitQuadroKANBAN.Model in 'Model\UnitQuadroKANBAN.Model.pas',
+  UnitDatabase in 'Database\UnitDatabase.pas';
 
 var
   App: THorse;
 
 begin
-  //ReportMemoryLeaksOnShutdown := true;
-  App := THorse.Create(9000);
-  App.Use(Jhonson);
-  App.Use(HandleException);
-  App.Use(CORS);
+  ReportMemoryLeaksOnShutdown := true;
+  App := THorse.Create;
+  App.Use(Jhonson)
+     .Use(HandleException)
+     .Use(CORS)
+     .Use(Upload)
+     .Use(OctetStream);
   //Controllers
   TControllerOcorrencias.Registrar(App);
   TControllerLogin.Registrar(App);
@@ -60,6 +71,15 @@ begin
   TControllerQuadroScrum.Registrar(App);
   TControllerBacklogSprint.Registrar(App);
   TControllerBurndownProjeto.Registrar(App);
+  TControllerQuadroKANBAN.Registrar(App);
   //inicia o servidor
-  App.Start;
+  App.Listen(9000,
+  procedure(Horse: THorse)
+    begin
+      Writeln(Format('Servidor rodando na porta %s', [Horse.Port.ToString]));
+      Writeln('Pressione ESC para parar ...');
+      Readln;
+      Horse.StopListen;
+    end
+  );
 end.

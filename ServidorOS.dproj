@@ -3,12 +3,12 @@
         <ProjectGuid>{4A1BE7CC-C69B-456D-A61B-B7F925D3D27D}</ProjectGuid>
         <MainSource>ServidorOS.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <TargetedPlatforms>129</TargetedPlatforms>
         <AppType>Console</AppType>
         <FrameworkType>None</FrameworkType>
         <ProjectVersion>18.4</ProjectVersion>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Linux64</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -26,6 +26,12 @@
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Linux64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Linux64)'!=''">
+        <Cfg_1_Linux64>true</Cfg_1_Linux64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
@@ -46,7 +52,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
-        <DCC_UnitSearchPath>modules\.dcp;modules\.dcu;modules;modules\factory-conection\FireDAC;modules\factory-conection\IBExpress;modules\factory-conection;modules\handle-exception\src;modules\horse\src;modules\horse-cors\src;modules\jhonson\src;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>modules\.dcp;modules\.dcu;modules;modules\dataset-serialize\src;modules\factory-connections\src\FireDAC;modules\factory-connections\src\IBExpress;modules\factory-connections\src;modules\handle-exception\src;modules\horse\src;modules\horse-cors\src;modules\horse-octet-stream\src;modules\horse-upload\src;modules\jhonson\src;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
@@ -64,6 +70,10 @@
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Linux64)'!=''">
+        <Debugger_Launcher>/usr/bin/xterm -e &quot;%debuggee%&quot;</Debugger_Launcher>
+        <Manifest_File>(None)</Manifest_File>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_Optimize>false</DCC_Optimize>
@@ -79,7 +89,9 @@
         <DCCReference Include="Model\UnitContrassenha.Model.pas"/>
         <DCCReference Include="Model\UnitOrdens.Model.pas"/>
         <DCCReference Include="UnitController.Ocorrencias.pas"/>
-        <DCCReference Include="UnitFuncoesComuns.pas"/>
+        <DCCReference Include="UnitFuncoesComuns.pas">
+            <Form>/  UnitController.Login in &apos;UnitController.Login.pas&apos;,</Form>
+        </DCCReference>
         <DCCReference Include="UnitController.Login.pas"/>
         <DCCReference Include="UnitController.Scrum.pas"/>
         <DCCReference Include="UnitController.Contrassenhas.pas"/>
@@ -97,6 +109,13 @@
         <DCCReference Include="Model\UnitHistoricoPrazoEntrega.Model.pas"/>
         <DCCReference Include="UnitController.Burndown.Projeto.pas"/>
         <DCCReference Include="Model\UnitBurndown.Projeto.Model.pas"/>
+        <DCCReference Include="Model\UnitProjetoScrum.Model.pas"/>
+        <DCCReference Include="Model\UnitAtualizaSprint.Model.pas"/>
+        <DCCReference Include="Model\UnitArquivos_Sprint.Model.pas"/>
+        <DCCReference Include="Model\UnitRetrospectiva.Model.pas"/>
+        <DCCReference Include="UnitController.QuadroKANBAN.pas"/>
+        <DCCReference Include="Model\UnitQuadroKANBAN.Model.pas"/>
+        <DCCReference Include="Database\UnitDatabase.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -117,6 +136,16 @@
                 <Source>
                     <Source Name="MainSource">ServidorOS.dpr</Source>
                 </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclDataSnapNativeServer250.bpl">Embarcadero DBExpress DataSnap Native Server Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\JvAppFrmDesign250.bpl">JVCL Application and Form Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\JvDotNetCtrlsDesign250.bpl">JVCL DotNet Controls</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\JvGlobusDesign250.bpl">JVCL Globus Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\JvPascalInterpreterDesign250.bpl">JVCL Interpreter Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\JvRuntimeDesignDesign250.bpl">JVCL Runtime Design Components</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Linux64">True</Platform>

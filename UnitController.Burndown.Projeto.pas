@@ -1,6 +1,7 @@
 unit UnitController.Burndown.Projeto;
 
 interface
+
 uses
   Horse,
   Classes,
@@ -9,15 +10,14 @@ uses
   System.DateUtils,
   Horse.Commons,
   DB,
-  UnitConexao.Model.Interfaces,
-  UnitConexao.FireDAC.Model,
-  UnitQuery.FireDAC.Model,
-  UnitFactory.Conexao.FireDAC,
-  UnitFuncoesComuns, UnitConstantes;
-
+  UnitConnection.Model.Interfaces,
+  UnitFuncoesComuns;
 
 type
   TControllerBurndownProjeto = class
+  private
+    class function CalculaPontoReal(DataEntrega, DataEntregaReal: TDateTime): integer;
+  public
     class procedure Registrar(App: THorse);
     class procedure Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
   end;
@@ -26,7 +26,12 @@ implementation
 
 { TControllerBurndownProjeto }
 
-uses UnitBacklog.Produto.Model;
+uses UnitBacklog.Produto.Model, UnitDatabase;
+
+class function TControllerBurndownProjeto.CalculaPontoReal(DataEntrega, DataEntregaReal: TDateTime): integer;
+begin
+  Result := DaysBetween(DataEntrega, DataEntregaReal);
+end;
 
 class procedure TControllerBurndownProjeto.Get(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
@@ -34,69 +39,57 @@ var
   aDatas: TJSONArray;
   aLinhaIdeal: TJSONArray;
   aLinhaReal: TJSONArray;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
   Query: iQuery;
   Dados: TDataSource;
-  CodProjeto: Integer;
-  Contador: Integer;
-  Dias: Integer;
-  SomaDias: Integer;
-  i: Integer;
-  Data: TDateTime;
-  Tarefas: Double;
-  TarefasIdeal: Double;
-  NaoEntregues: Double;
+  CodProjeto: integer;
+  i: integer;
+  NaoEntregues: integer;
+  DataEntregaProgramada: string;
 begin
   // componentes de conexao
-  Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  CodProjeto := Req.Params.Items['id'].ToInteger();
-  Query.DataSource(Dados);
-  aDatas :=  TJSONArray.Create;
+  Query       := TDatabase.Query();
+  Dados       := TDataSource.Create(nil);
+  CodProjeto  := Req.Params.Items['id'].ToInteger();
+  aDatas      := TJSONArray.Create;
   aLinhaIdeal := TJSONArray.Create;
-  aLinhaReal := TJSONArray.Create;
+  aLinhaReal  := TJSONArray.Create;
   Query.Clear;
-  Query.Add('SELECT BS_DATA_ENT_PROG, BS_DATA_SPRINT, BS_ESTADO, BS_DATA_ENT_REAL FROM BACKLOG_SPRINT WHERE BS_PS = :PROJETO');
+  Query.Add('SELECT BS_DATA_ENT_PROG, BS_DATA_SPRINT, BS_ESTADO, BS_DATA_ENT_REAL FROM BACKLOG_SPRINT ');
+  Query.Add('WHERE BS_PS = :PROJETO ORDER BY BS_DATA_SPRINT');
   Query.AddParam('PROJETO', CodProjeto);
   Query.Open;
-  oJson := TJSONObject.Create;
-  Dados.DataSet.Last;
-  Contador := Dados.DataSet.RecordCount;
-  SomaDias := 0;
+  Dados.DataSet := Query.DataSet;
+  oJson         := TJSONObject.Create;
   Dados.DataSet.First;
   while not Dados.DataSet.Eof do
   begin
-    Dias := DaysBetween(Dados.DataSet.FieldByName('BS_DATA_SPRINT').AsDateTime, Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsDateTime);
-    SomaDias := SomaDias + Dias;
+    aDatas.Add(FormatDateTime('yyyy-mm-dd', Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsDateTime));
     Dados.DataSet.Next;
   end;
-  //primeira data
+  for i := aDatas.Count downto 0 do
+    aLinhaIdeal.Add(i);
+  NaoEntregues := aDatas.Count;
+  aLinhaReal.Add(NaoEntregues);
   Dados.DataSet.First;
-  Data := Dados.DataSet.FieldByName('BS_DATA_SPRINT').AsDateTime;
-  for i := 0 to Pred(SomaDias) do
+  while not Dados.DataSet.Eof do  
   begin
-    aDatas.Add(DateToStr(Data));
-    Data := IncDay(Data, 1);
-  end;
-  Tarefas := Contador;
-  TarefasIdeal := Tarefas/SomaDias;
-  for i := 0 to Pred(SomaDias) do
-  begin
-    aLinhaIdeal.Add(Arredondar(Tarefas, 2));
-    Tarefas := Tarefas - TarefasIdeal;
-  end;
-  NaoEntregues := Contador;
-  for i := 0 to Pred(aDatas.Count) do
-  begin
-    aLinhaReal.Add(NaoEntregues);
-    if Dados.DataSet.Locate('BS_DATA_ENT_REAL', aDatas.Items[i].Value, []) then
+    if not Dados.DataSet.FieldByName('BS_DATA_ENT_REAL').IsNull then
     begin
-      aLinhaReal.Add(aLinhaIdeal.Items[i].Value.ToDouble);
-      NaoEntregues := NaoEntregues - aLinhaIdeal.Items[i].Value.ToDouble;
+      if Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsDateTime = Dados.DataSet.FieldByName('BS_DATA_ENT_REAL').AsDateTime then
+      begin
+        Dec(NaoEntregues, 1);
+      end;
+      if Dados.DataSet.FieldByName('BS_DATA_ENT_REAL').AsDateTime > Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsDateTime then
+      begin
+        Inc(NaoEntregues, CalculaPontoReal(Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsDateTime, Dados.DataSet.FieldByName('BS_DATA_ENT_REAL').AsDateTime))
+      end;
+      if Dados.DataSet.FieldByName('BS_DATA_ENT_REAL').AsDateTime < Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsDateTime then
+      begin        
+        Dec(NaoEntregues, CalculaPontoReal(Dados.DataSet.FieldByName('BS_DATA_ENT_PROG').AsDateTime, Dados.DataSet.FieldByName('BS_DATA_ENT_REAL').AsDateTime));
+      end;
     end;
+    aLinhaReal.Add(NaoEntregues);
+    Dados.DataSet.Next;
   end;
   oJson := TJSONObject.Create;
   oJson.AddPair('datas', aDatas);

@@ -1,37 +1,46 @@
 unit UnitFuncoesComuns;
 
 interface
+
 uses
   DB,
   UnitConstantes,
-  UnitConexao.Model.Interfaces,
-  UnitOcorrencia.Model,
-  UnitConexao.FireDAC.Model,
-  UnitQuery.FireDAC.Model,
-  UnitFactory.Conexao.FireDAC,
-  System.SysUtils;
-
-
+  UnitConnection.Model.Interfaces,
+  System.SysUtils,
+  System.NetEncoding,
+  UnitDatabase,
+  IdCoderMIME;
 
 function EnDecryptString(StrValue: String; Chave: Word): String;
 function GeraCodigo(Tabela, Campo: string): integer;
 function FormatarData(Value: string): TDateTime;
-//tipos enumerados
+function FormatarDataAmericano(Value: string): TDateTime;
+// tipos enumerados
 function StrToEnumerado(out ok: Boolean; const s: string; const AString: array of string; const AEnumerados: array of variant): variant;
 function EnumeradoToStr(const t: variant; const AString: array of string; const AEnumerados: array of variant): variant;
 function Arredondar(Valor: Double; Dec: integer): Double;
 function TiraCaracteresInvalidos(Texto: String): String;
-
-
+function ImagemToBase64(const imagem: string): string;
 
 implementation
+
+uses
+  System.Classes;
 
 function FormatarData(Value: string): TDateTime;
 var
   Data: TArray<string>;
 begin
-  Data := Value.Split(['/']);
-  Result := StrToDate(Data[1]+'/'+Data[0]+'/'+Data[2]);
+  Data   := Value.Split(['/']);
+  Result := StrToDate(Data[1] + '/' + Data[0] + '/' + Data[2]);
+end;
+
+function FormatarDataAmericano(Value: string): TDateTime;
+var
+  Data: TArray<string>;
+begin
+  Data   := Value.Split(['-']);
+  Result := StrToDate(Data[2] + '/' + Data[1] + '/' + Data[0]);
 end;
 
 function EnDecryptString(StrValue: String; Chave: Word): String;
@@ -46,15 +55,14 @@ begin
 end;
 
 function GeraCodigo(Tabela, Campo: string): integer;
-var Query: iQuery;
-    Dados: TDataSource;
-    Conexao: iConexao;
+var
+  Query  : iQuery;
+  Dados  : TDataSource;
 begin
-  Dados := TDataSource.Create(nil);
-  Conexao := TFactoryConexaoFireDAC.New.Conexao(TConstants.BancoDados);
-  Query := TFactoryConexaoFireDAC.New.Query(Conexao);
-  Query.DataSource(Dados);
+  Dados   := TDataSource.Create(nil);
+  Query   := TDatabase.Query;
   Query.Open('SELECT MAX(' + Campo + ') FROM ' + Tabela);
+  Dados.DataSet := Query.DataSet;
   if Dados.DataSet.IsEmpty then
     Result := 1
   else
@@ -109,6 +117,20 @@ begin
   Texto  := StringReplace(Texto, '<', '&lt;', [rfReplaceAll]);
   Texto  := StringReplace(Texto, '>', '&gt;', [rfReplaceAll]);
   Result := Texto;
+end;
+
+function ImagemToBase64(const imagem: string): string;
+var
+  inStream: TFileStream;
+  base64: TIdEncoderMIME;
+begin
+  try
+    base64 := TIdEncoderMIME.Create(nil);
+    inStream := TFileStream.Create(imagem, fmOpenRead);
+    Result := TIdEncoderMIME.EncodeStream(inStream);
+  finally
+    inStream.Free;
+  end;
 end;
 
 end.

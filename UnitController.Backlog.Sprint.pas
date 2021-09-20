@@ -1,6 +1,7 @@
 unit UnitController.Backlog.Sprint;
 
 interface
+
 uses
   Horse,
   Classes,
@@ -8,12 +9,10 @@ uses
   System.Json,
   Horse.Commons,
   DB,
-  UnitConexao.Model.Interfaces,
-  UnitConexao.FireDAC.Model,
-  UnitQuery.FireDAC.Model,
-  UnitFactory.Conexao.FireDAC,
-  UnitFuncoesComuns, UnitConstantes, UnitBacklog.Produto.Model;
-
+  UnitConnection.Model.Interfaces,
+  UnitFuncoesComuns,
+  UnitConstantes,
+  UnitBacklog.Produto.Model;
 
 type
   TControllerBacklogSprint = class
@@ -22,31 +21,53 @@ type
     class procedure Put(Req: THorseRequest; Res: THorseResponse; Next: TProc);
     class procedure PostSprintBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
     class procedure DeleteSprintBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure UploadArquivos(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure DeleteBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+    class procedure DeleteSprint(Req: THorseRequest; Res: THorseResponse; Next: TProc);
   end;
 
 implementation
 
 { TControllerBacklogSprint }
 
-uses UnitBacklog.Sprint.Model;
+uses UnitBacklog.Sprint.Model, Horse.Upload, UnitArquivos_Sprint.Model,
+  UnitDatabase;
 
-
-class procedure TControllerBacklogSprint.DeleteSprintBacklog(Req: THorseRequest;
+class procedure TControllerBacklogSprint.DeleteSprint(Req: THorseRequest;
   Res: THorseResponse; Next: TProc);
 var
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
-  Query: iQuery;
-  Dados: TDataSource;
-  Codigo: Integer;
-  oJson: TJSONObject;
+  Query  : iQuery;
+  Codigo : Integer;
+  oJson  : TJSONObject;
 begin
   // componentes de conexao
-  Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  Query.DataSource(Dados);
+  Query   := TDatabase.Query();
+  Codigo := Req.Params.Items['id'].ToInteger;
+  try
+    Query.Add('DELETE FROM BACKLOG_SPRINT WHERE (BS_CODIGO = :CODIGO)');
+    Query.AddParam('CODIGO', Codigo);
+    Query.ExecSQL;
+    Res.Status(THTTPStatus.NoContent);
+  except
+    on E: exception do
+    begin
+      raise exception.Create('Erro ao deletar backlog' + E.Message);
+      Res.Status(THTTPStatus.BadRequest);
+      oJson := TJSONObject.Create;
+      oJson.AddPair('Error', 'ID do Backlog não informado corretamente!' + sLineBreak + E.Message);
+      Res.Send<TJSONObject>(oJson);
+    end
+  end;
+end;
+
+class procedure TControllerBacklogSprint.DeleteSprintBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Query  : iQuery;
+  Codigo : Integer;
+  oJson  : TJSONObject;
+begin
+  // componentes de conexao
+  Query   := TDatabase.Query();
   Codigo := Req.Params.Items['id'].ToInteger;
   try
     Query.Add('DELETE FROM BS_BP WHERE (BB_CODIGO = :CODIGO)');
@@ -59,7 +80,33 @@ begin
       raise exception.Create('Erro ao deletar sprint backlog' + E.Message);
       Res.Status(THTTPStatus.BadRequest);
       oJson := TJSONObject.Create;
-      oJson.AddPair('Error', 'Sprint backlog não informado corretamente!'+sLineBreak+e.Message);
+      oJson.AddPair('Error', 'Sprint backlog não informado corretamente!' + sLineBreak + E.Message);
+      Res.Send<TJSONObject>(oJson);
+    end
+  end;
+end;
+
+class procedure TControllerBacklogSprint.DeleteBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Query  : iQuery;
+  Codigo : Integer;
+  oJson  : TJSONObject;
+begin
+  // componentes de conexao
+  Query   := TDatabase.Query();
+  Codigo := Req.Params.Items['id'].ToInteger;
+  try
+    Query.Add('DELETE FROM BACKLOG_P WHERE (BP_CODIGO = :CODIGO)');
+    Query.AddParam('CODIGO', Codigo);
+    Query.ExecSQL;
+    Res.Status(THTTPStatus.NoContent);
+  except
+    on E: exception do
+    begin
+      raise exception.Create('Erro ao deletar backlog' + E.Message);
+      Res.Status(THTTPStatus.BadRequest);
+      oJson := TJSONObject.Create;
+      oJson.AddPair('Error', 'ID do Backlog não informado corretamente!' + sLineBreak + E.Message);
       Res.Send<TJSONObject>(oJson);
     end
   end;
@@ -67,20 +114,13 @@ end;
 
 class procedure TControllerBacklogSprint.Post(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
-  oJson: TJSONObject;
+  oJson        : TJSONObject;
   BacklogSprint: TBacklogSprint;
-  Codigo: integer;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
-  Query: iQuery;
-  Dados: TDataSource;
+  Codigo       : Integer;
+  Query        : iQuery;
 begin
   // componentes de conexao
-  Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  Query.DataSource(Dados);
+  Query   := TDatabase.Query();
   oJson := TJSONObject.Create;
   if Req.Body <> '' then
   begin
@@ -89,7 +129,7 @@ begin
       Codigo := GeraCodigo('BACKLOG_SPRINT', 'BS_CODIGO');
       Query.Add('INSERT INTO BACKLOG_SPRINT (BS_CODIGO, BS_CONTEUDO, BS_DATA_SPRINT, BS_DATA_ENT_PROG, BS_ESTADO, BS_DESCRICAO, BS_PS)');
       Query.Add('VALUES (:CODIGO, :CONTEUDO, :DATA_SPRINT, :DATA_ENT_PROG, :ESTADO, :DESCRICAO, :COD_PROJETO)');
-      Query.AddParam('CODIGO', codigo);
+      Query.AddParam('CODIGO', Codigo);
       Query.AddParam('CONTEUDO', BacklogSprint.Conteudo);
       Query.AddParam('DATA_SPRINT', Date);
       Query.AddParam('DATA_ENT_PROG', FormatarData(BacklogSprint.DataEntregaProgramacao));
@@ -104,7 +144,7 @@ begin
       begin
         raise exception.Create('Erro ao inserir Sprint' + E.Message);
         Res.Status(THTTPStatus.BadRequest);
-        oJson.AddPair('Error', 'Sprint não informado corretamente!'+sLineBreak+e.Message);
+        oJson.AddPair('Error', 'Sprint não informado corretamente!' + sLineBreak + E.Message);
         Res.Send<TJSONObject>(oJson);
       end
     end;
@@ -119,31 +159,25 @@ end;
 
 class procedure TControllerBacklogSprint.Put(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
-  oJson: TJSONObject;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
-  Query: iQuery;
-  Dados: TDataSource;
-  CodigoSprint: Integer;
+  oJson        : TJSONObject;
+  Query        : iQuery;
+  CodigoSprint : Integer;
   BacklogSprint: TBacklogSprint;
 begin
   // componentes de conexao
-  Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  Query.DataSource(Dados);
+  Query   := TDatabase.Query();
   oJson := TJSONObject.Create;
   if Req.Body <> '' then
   begin
-    CodigoSprint := Req.Params.Items['id'].ToInteger;
+    CodigoSprint  := Req.Params.Items['id'].ToInteger;
     BacklogSprint := TBacklogSprint.FromJsonString(Req.Body);
     try
       if BacklogSprint.Estado = 'ENTREGUE' then
       begin
         Query.Add('UPDATE BACKLOG_SPRINT SET BS_ESTADO = :ESTADO, BS_DATA_ENT_REAL = :DATA_ENTREGA WHERE (BS_CODIGO = :CODIGO)');
         Query.AddParam('DATA_ENTREGA', Date);
-      end else
+      end
+      else
       begin
         Query.Add('UPDATE BACKLOG_SPRINT SET BS_ESTADO = :ESTADO WHERE (BS_CODIGO = :CODIGO)');
       end;
@@ -157,7 +191,7 @@ begin
       begin
         raise exception.Create('Erro ao inserir Sprint' + E.Message);
         Res.Status(THTTPStatus.BadRequest);
-        oJson.AddPair('Error', 'Sprint não informado corretamente!'+sLineBreak+e.Message);
+        oJson.AddPair('Error', 'Sprint não informado corretamente!' + sLineBreak + E.Message);
         Res.Send<TJSONObject>(oJson);
       end
     end;
@@ -172,25 +206,18 @@ end;
 
 class procedure TControllerBacklogSprint.PostSprintBacklog(Req: THorseRequest; Res: THorseResponse; Next: TProc);
 var
-  oJson: TJSONObject;
-  Fabrica: iFactoryConexao;
-  Conexao: iConexao;
-  Query: iQuery;
-  Dados: TDataSource;
-  CodigoBS_BP: Integer;
-  CodigoSprint: Integer;
+  oJson         : TJSONObject;
+  Query         : iQuery;
+  CodigoBS_BP   : Integer;
+  CodigoSprint  : Integer;
   BacklogProduto: TBacklogProduto;
 begin
   // componentes de conexao
-  Fabrica := TFactoryConexaoFireDAC.New;
-  Conexao := Fabrica.Conexao(TConstants.BancoDados);
-  Query := Fabrica.Query(Conexao);
-  Dados := TDataSource.Create(nil);
-  Query.DataSource(Dados);
+  Query   := TDatabase.Query();
   oJson := TJSONObject.Create;
   if Req.Body <> '' then
   begin
-    CodigoSprint := Req.Params.Items['id'].ToInteger;
+    CodigoSprint   := Req.Params.Items['id'].ToInteger;
     BacklogProduto := TBacklogProduto.FromJsonString(Req.Body);
     try
       CodigoBS_BP := GeraCodigo('BS_BP', 'BB_CODIGO');
@@ -208,7 +235,7 @@ begin
       begin
         raise exception.Create('Erro ao inserir Sprint' + E.Message);
         Res.Status(THTTPStatus.BadRequest);
-        oJson.AddPair('Error', 'Sprint não informado corretamente!'+sLineBreak+e.Message);
+        oJson.AddPair('Error', 'Sprint não informado corretamente!' + sLineBreak + E.Message);
         Res.Send<TJSONObject>(oJson);
       end
     end;
@@ -221,12 +248,59 @@ begin
   end;
 end;
 
+class procedure TControllerBacklogSprint.UploadArquivos(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  LUploadConfig : TUploadConfig;
+  CodigoSprint  : Integer;
+  ArquivosSprint: TArquivosSprint;
+  CodArquivo    : Integer;
+  oJson         : TJSONObject;
+  Query         : iQuery;
+begin
+  if Req.Params.Count > 0 then
+    CodigoSprint := Req.Params.Items['id'].ToInteger;
+  // LUploadConfig := TUploadConfig.Create('c:\serverfiles\'+CodigoSprint.ToString);
+  LUploadConfig               := TUploadConfig.Create('/home/mtyuzuri_gmail_com/ArquivosScrum/' + CodigoSprint.ToString);
+  LUploadConfig.ForceDir      := true;
+  LUploadConfig.OverrideFiles := true;
+
+  // Optional: Callback for each file received
+  LUploadConfig.UploadFileCallBack := procedure(Sender: TObject; AFile: TUploadFileInfo)
+    begin
+      Writeln('');
+      Writeln('Upload file:' + AFile.filename + ' ' + AFile.size.ToString);
+      // insere na tabela
+      // componentes de conexao
+      Query   := TDatabase.Query();
+      CodArquivo := GeraCodigo('ARQUIVOS_SPRINT', 'AS_CODIGO');
+      Query.Add('INSERT INTO ARQUIVOS_SPRINT (AS_CODIGO, AS_CAMINHO, AS_DATA, AS_HORA, AS_SPRINT)');
+      Query.Add('VALUES (:CODIGO, :CAMINHO, :DATA, :HORA, :SPRINT)');
+      Query.AddParam('CODIGO', CodArquivo);
+      Query.AddParam('SPRINT', CodigoSprint);
+      Query.AddParam('CAMINHO', AFile.fullpath);
+      Query.AddParam('DATA', Date);
+      Query.AddParam('HORA', Now);
+      Query.ExecSQL;
+    end;
+
+  // Optional: Callback on end of all files
+  LUploadConfig.UploadsFishCallBack := procedure(Sender: TObject; AFiles: TUploadFiles)
+    begin
+      Writeln('');
+      Writeln('Finish ' + AFiles.Count.ToString + ' files.');
+    end;
+  Res.Send<TUploadConfig>(LUploadConfig);
+end;
+
 class procedure TControllerBacklogSprint.Registrar(App: THorse);
 begin
   App.Post('/sprint', Post);
   App.Put('/sprint/:id', Put);
   App.Post('/sprint_backlog/:id', PostSprintBacklog);
   App.Delete('/sprint_backlog/:id', DeleteSprintBacklog);
+  App.Delete('/backlog/:id', DeleteBacklog);
+  App.Delete('/sprint/:id', DeleteSprint);
+  App.Post('/Upload/:id', UploadArquivos);
 end;
 
 end.
