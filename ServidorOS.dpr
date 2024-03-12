@@ -76,11 +76,10 @@ begin
   TControllerQuadroKANBAN.Registrar(App);
   TControllerNCM.Registrar;
   //inicia o servidor
-  //inicia o servidor
-	if GetEnvironmentVariable('PORT').IsEmpty then
-		Porta := 9001
-	else	
-		Porta := GetEnvironmentVariable('PORT').ToInteger;
+  if GetEnvironmentVariable('PORT').IsEmpty then
+     Porta := 9001
+  else	
+     Porta := GetEnvironmentVariable('PORT').ToInteger;
   THorse.Listen(Porta,
   procedure(App: THorse)
   begin
