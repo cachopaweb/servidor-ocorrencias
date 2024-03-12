@@ -14,6 +14,7 @@ uses
   Horse.OctetStream,
   Classes,
   SysUtils,
+  StrUtils,
   System.Json,
   UnitConstantes in 'Utils\UnitConstantes.pas',
   UnitLogin.Model in 'Modulos\Login\Models\UnitLogin.Model.pas',
@@ -75,13 +76,14 @@ begin
   TControllerQuadroKANBAN.Registrar(App);
   TControllerNCM.Registrar;
   //inicia o servidor
-  App.Listen(9000,
-  procedure(Horse: THorse)
-    begin
-      Writeln(Format('Servidor rodando na porta %s', [Horse.Port.ToString]));
-      Writeln('Pressione ESC para parar ...');
-      Readln;
-      Horse.StopListen;
-    end
-  );
+  //inicia o servidor
+	if GetEnvironmentVariable('PORT').IsEmpty then
+		Porta := 9001
+	else	
+		Porta := GetEnvironmentVariable('PORT').ToInteger;
+  THorse.Listen(Porta,
+  procedure(App: THorse)
+  begin
+    Writeln('Server is running on port '+App.Port.ToString);
+  end);
 end.
